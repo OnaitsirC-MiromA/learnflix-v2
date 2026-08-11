@@ -6,7 +6,8 @@ Você aponta uma pasta, ela vira um curso: o Learnflix encontra as aulas, respei
 módulos, gera as capas e lembra exatamente onde você parou em cada aula. Tudo roda na sua máquina —
 nada é enviado para lugar nenhum, nenhuma conta, nenhum login.
 
-**Instalar é uma linha no terminal**, igual no macOS, no Windows e no Linux.
+**Instalar é uma linha no terminal** — igual no macOS, no Windows e no Linux. Não precisa clonar
+este repositório, nem descompactar nada, nem compilar: é colar o comando e o app abre.
 
 ![Biblioteca do Learnflix com dezenas de cursos em grade, cada um com capa, número de aulas e percentual concluído](docs/biblioteca.png)
 
@@ -287,6 +288,39 @@ tem **uma única dependência de execução** (Fastify) e nenhum módulo nativo:
 próprio Node.
 
 O código e os comentários estão em português.
+
+---
+
+## Dúvidas, problemas ou ideias
+
+Fale comigo — **[abra uma issue aqui](https://github.com/OnaitsirC-MiromA/learnflix-v2/issues/new)**.
+Não precisa saber programar nem formatar nada: diga o que aconteceu, em que sistema, e eu respondo.
+
+Se o app não abriu, ajuda muito colar **o que apareceu no terminal** — é ali que ele diz o motivo.
+
+---
+
+## O que mudou nesta versão
+
+O Learnflix agora **roda com um comando só**. Antes era baixar o repositório, descompactar, achar o
+script certo do seu sistema e esperar a primeira compilação; hoje é `npx learnflix`, ou uma linha de
+instalação para quem nem tem o Node.
+
+O que isso significa na prática:
+
+- **Nada compila na sua máquina.** O banco de dados agora usa o SQLite que já vem dentro do Node, e
+  não uma biblioteca que precisava ser compilada na instalação. Foi essa troca que derrubou a
+  instalação de cerca de um minuto para menos de um segundo — e que permitiu empacotar o app inteiro
+  num arquivo só.
+- **Dá para usar sem ter o Node.** O instalador de uma linha traz um executável que já leva tudo
+  dentro.
+- **Seus dados saíram da pasta do programa** e foram para `~/.learnflix`. Atualizar passou a ser
+  trocar o executável, sem encostar no seu progresso.
+- **A biblioteca virou um arquivo.** Exporte pelo botão **↓** na estante e leve para outro
+  computador — cursos, bibliotecas e o ponto exato de cada aula.
+
+O app em si é o mesmo: as mesmas telas, os mesmos atalhos, o mesmo jeito de organizar. O que mudou
+foi tudo o que ficava entre você e a primeira aula.
 
 ---
 
