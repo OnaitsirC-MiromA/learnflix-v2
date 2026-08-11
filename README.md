@@ -6,28 +6,23 @@ Você aponta uma pasta, ela vira um curso: o Learnflix encontra as aulas, respei
 módulos, gera as capas e lembra exatamente onde você parou em cada aula. Tudo roda na sua máquina —
 nada é enviado para lugar nenhum, nenhuma conta, nenhum login.
 
+**Instalar é uma linha no terminal**, igual no macOS, no Windows e no Linux.
+
 ![Biblioteca do Learnflix com dezenas de cursos em grade, cada um com capa, número de aulas e percentual concluído](docs/biblioteca.png)
 
 ---
 
 ## Como rodar
 
-Um comando. O mesmo nos três sistemas.
+**Cole uma linha no terminal. É a instalação inteira.**
+
+Se você tem Node 22.5 ou maior:
 
 ```bash
 npx learnflix
 ```
 
-É isso. O navegador abre sozinho em `http://localhost:7777`. Nada de baixar o repositório, extrair
-ZIP, instalar dependências ou compilar — o download tem 563 KB e a instalação leva menos de um
-segundo.
-
-<br>
-
-### Não tem Node? Então nem precisa instalar
-
-Um comando também, e sem pré-requisito nenhum. Ele baixa o Learnflix já pronto para o seu sistema,
-confere a soma de verificação e põe no seu PATH:
+Se não tem — e não quer instalar nada antes:
 
 ```bash
 # macOS e Linux
@@ -39,48 +34,16 @@ curl -fsSL https://raw.githubusercontent.com/OnaitsirC-MiromA/learnflix-v2/main/
 irm https://raw.githubusercontent.com/OnaitsirC-MiromA/learnflix-v2/main/install.ps1 | iex
 ```
 
-Depois é só `learnflix`, de qualquer pasta.
+O navegador abre sozinho em `http://localhost:7777`. **Sem clonar repositório, sem extrair ZIP, sem
+instalar dependências, sem compilar nada.**
 
-O download tem cerca de 110 MB porque o Node vai embutido dentro dele — é esse o preço de não
-precisar instalar nada. Se você já tem Node, o `npx` acima baixa 563 KB e faz o mesmo.
+|  | Baixa | Demora | Nas próximas vezes |
+|---|---|---|---|
+| `npx learnflix` | 577 KB | cerca de 1 segundo | `npx learnflix` |
+| instalador | ~110 MB | alguns segundos | `learnflix`, de qualquer pasta |
 
-<details>
-<summary>O Windows mostrou um aviso de "aplicativo não reconhecido"?</summary>
-
-<br>
-
-É o SmartScreen: ele desconfia de todo executável novo que não tenha um certificado pago de
-assinatura. **Mais informações → Executar assim mesmo**. No macOS isso não acontece — arquivo
-baixado por `curl` não recebe a marca de quarentena que o Gatekeeper usa.
-
-</details>
-
-<br>
-
-### Se preferir instalar o Node
-
-O `npx` precisa dele. É uma vez só na vida da máquina:
-
-| Sistema | Comando |
-|---|---|
-| macOS | `brew install node` |
-| Windows | `winget install OpenJS.NodeJS.LTS` |
-| Linux | o pacote da sua distro, ou [nodejs.org](https://nodejs.org) |
-
-Prefere clicar em vez de digitar? O instalador **LTS** em [nodejs.org](https://nodejs.org) é
-próximo-próximo-concluir. Feche e reabra o terminal depois.
-
-<br>
-
-### Nas próximas vezes
-
-Só repetir `npx learnflix` (ou `learnflix`, se você usou o instalador). Para garantir a versão mais
-nova pelo npx, `npx learnflix@latest`.
-
-Para parar, `Ctrl+C` no terminal.
-
-**Se a porta 7777 estiver ocupada**, o app sobe na seguinte e avisa qual endereço usar — não é preciso
-fazer nada.
+O instalador é maior porque o Node vai embutido no arquivo — é exatamente o que dispensa você de
+instalá-lo. Ele ainda confere a soma SHA-256 do download antes de pôr qualquer coisa no seu PATH.
 
 ![Tela inicial vazia do Learnflix, com os botões Adicionar curso e Importar pasta de cursos](docs/tela-inicial.png)
 
@@ -88,14 +51,51 @@ fazer nada.
 
 <br>
 
-### Vindo do Learnflix v1?
+**Para parar**, `Ctrl+C` no terminal. **Se a porta 7777 estiver ocupada**, o app sobe na seguinte e
+diz qual endereço usar — você não precisa fazer nada.
 
-Se você rodar o `npx learnflix` **de dentro da pasta onde o v1 estava**, ele adota o banco de lá e
-avisa: seus cursos e seu progresso aparecem como estavam.
+**Para atualizar**, rode `npx learnflix@latest` ou o instalador de novo. Seus cursos e seu progresso
+não são tocados: eles moram fora da pasta do programa.
 
-De qualquer outro lugar — outra máquina, outro computador — o caminho é o arquivo de backup: no v1,
-botão **↓** na estante; aqui, **Configurações → Backup e migração → Importar arquivo…**. Veja
-[Backup e migração](#backup-e-migração).
+<details>
+<summary>Não tenho Node e prefiro instalar mesmo assim</summary>
+
+<br>
+
+É uma vez só na vida da máquina, e aí o `npx learnflix` passa a funcionar:
+
+| Sistema | Comando |
+|---|---|
+| macOS | `brew install node` |
+| Windows | `winget install OpenJS.NodeJS.LTS` |
+| Linux | o pacote da sua distro, ou [nodejs.org](https://nodejs.org) |
+
+Prefere clicar? O instalador **LTS** em [nodejs.org](https://nodejs.org) é próximo-próximo-concluir.
+Feche e reabra o terminal depois.
+
+</details>
+
+<details>
+<summary>O Windows mostrou "aplicativo não reconhecido"</summary>
+
+<br>
+
+É o SmartScreen: ele desconfia de todo executável novo sem um certificado pago de assinatura.
+**Mais informações → Executar assim mesmo**. No macOS isso não acontece — arquivo baixado por `curl`
+não recebe a marca de quarentena que o Gatekeeper usa.
+
+</details>
+
+<details>
+<summary>Já usava o Learnflix em outro computador</summary>
+
+<br>
+
+Exporte a biblioteca lá (botão **↓** no topo da estante) e importe aqui em
+**Configurações → Backup e migração**. Vai tudo junto: cursos, bibliotecas e o progresso de cada
+aula. Veja [Backup e migração](#backup-e-migração).
+
+</details>
 
 ---
 
@@ -270,7 +270,7 @@ nenhuma.
 Monorepo com dois workspaces: `server` (Fastify + SQLite) e `web` (React + Vite).
 
 ```bash
-git clone <este repositório> && cd learnflix && npm install
+git clone https://github.com/OnaitsirC-MiromA/learnflix-v2 && cd learnflix-v2 && npm install
 npm run dev        # Vite em :5173 com hot reload, API em :7777
 npm test           # testes dos dois workspaces
 npm run build      # tipos + interface + dist/learnflix.cjs (o arquivo único)
