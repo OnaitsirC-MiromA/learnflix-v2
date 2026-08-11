@@ -1,5 +1,18 @@
-import { DatabaseSync } from 'node:sqlite';
+import { createRequire } from 'node:module';
+import type { DatabaseSync as TipoDoBanco } from 'node:sqlite';
 import { SCHEMA_V1 } from './schema';
+
+// node:sqlite entra por require(), e não por import estático, para o aviso de
+// "feature experimental" poder ser silenciado (ver quiet.ts).
+//
+// O motivo é sutil: em ESM, os módulos embutidos são instanciados na fase de
+// LIGAÇÃO, antes de qualquer corpo de módulo rodar — inclusive o do quiet.ts.
+// Um require() é chamada de execução, então acontece depois do filtro estar de
+// pé. O `import type` acima não conta: tipos somem na compilação e não criam
+// dependência nenhuma em tempo de execução.
+const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as {
+  DatabaseSync: new (caminho: string) => TipoDoBanco;
+};
 
 /**
  * O banco do Learnflix usa o SQLite que já vem dentro do Node (`node:sqlite`),
@@ -13,7 +26,7 @@ import { SCHEMA_V1 } from './schema';
  * e `transaction()`. Estão aqui embaixo, e são a única coisa que o resto do
  * código precisa saber sobre a diferença.
  */
-export type Db = DatabaseSync;
+export type Db = TipoDoBanco;
 
 /**
  * Lê ou escreve um PRAGMA.

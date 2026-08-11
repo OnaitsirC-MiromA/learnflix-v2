@@ -33,8 +33,24 @@ function defaultRoots(): string[] {
   return roots;
 }
 
+/**
+ * Onde ficam o banco, as miniaturas e os convertidos.
+ *
+ * Fora da pasta de instalação, sempre. O app pode ser um executável que vive em
+ * qualquer lugar e é substituído inteiro a cada atualização — se os dados
+ * morassem junto dele, como no v1, atualizar apagaria o histórico de quem já
+ * usava. É esta separação que faz "atualizar sem perder nada" ser estrutural, e
+ * não uma promessa.
+ */
+export function defaultDataDir(env: NodeJS.ProcessEnv = process.env, plataforma = process.platform): string {
+  // No Windows, pasta oculta na home não é a convenção: dados de aplicativo
+  // moram em LOCALAPPDATA, que é onde backup e perfil móvel vão procurar.
+  if (plataforma === 'win32' && env.LOCALAPPDATA) return path.join(env.LOCALAPPDATA, 'Learnflix');
+  return path.join(os.homedir(), '.learnflix');
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  const dataDir = path.resolve(env.DATA_DIR ?? path.join(process.cwd(), 'data'));
+  const dataDir = path.resolve(env.DATA_DIR ?? defaultDataDir(env));
   const allowedRoots = (env.ALLOWED_ROOTS ? env.ALLOWED_ROOTS.split(path.delimiter) : defaultRoots())
     .map((p) => p.trim())
     .filter(Boolean)
