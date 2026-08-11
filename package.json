@@ -4,22 +4,49 @@
   "type": "module",
   "description": "Assista aos cursos que estão nas suas pastas, com progresso confiável.",
   "license": "MIT",
-  "keywords": ["cursos", "video", "player", "local", "offline", "progresso"],
-  "engines": { "node": ">=22.5.0" },
-  "bin": { "learnflix": "dist/learnflix.js" },
-  "files": ["dist"],
-  "workspaces": ["server", "web"],
+  "author": "OnaitsirC-MiromA",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OnaitsirC-MiromA/learnflix-v2.git"
+  },
+  "homepage": "https://github.com/OnaitsirC-MiromA/learnflix-v2#readme",
+  "bugs": {
+    "url": "https://github.com/OnaitsirC-MiromA/learnflix-v2/issues"
+  },
+  "keywords": [
+    "cursos",
+    "video",
+    "player",
+    "local",
+    "offline",
+    "progresso"
+  ],
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "bin": {
+    "learnflix": "dist/learnflix.cjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "workspaces": [
+    "server",
+    "web"
+  ],
   "scripts": {
     "predev": "node scripts/gerar-bundled.mjs",
     "dev": "concurrently -k -n server,web -c blue,green \"npm run dev --workspace=server\" \"npm run dev --workspace=web\"",
     "build": "npm run build --workspace=web && node scripts/gerar-bundled.mjs && npm run build --workspace=server && node scripts/empacotar.mjs",
-    "start": "node dist/learnflix.js",
+    "start": "node dist/learnflix.cjs",
+    "build:binario": "node scripts/build-binario.mjs",
     "pretest": "node scripts/gerar-bundled.mjs",
     "test": "npm run test --workspace=server && npm run test --workspace=web"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
     "esbuild": "^0.28.2",
+    "postject": "^1.0.0-alpha.6",
     "typescript": "^5.6.3"
   }
 }

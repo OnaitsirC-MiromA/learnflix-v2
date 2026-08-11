@@ -33,27 +33,33 @@ const shutdown = () => {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
-try {
-  const { port, trocou } = await escutarComFallback(app, config.port, config.bind);
-  const url = `http://localhost:${port}`;
-  const abrindo = config.openBrowser && temInterface;
+// Numa função, e não com await no topo do módulo: o empacotamento gera
+// CommonJS — exigência do executável único — e CommonJS não tem top-level await.
+async function subir(): Promise<void> {
+  try {
+    const { port, trocou } = await escutarComFallback(app, config.port, config.bind);
+    const url = `http://localhost:${port}`;
+    const abrindo = config.openBrowser && temInterface;
 
-  console.log(
-    mensagemDeBoot({
-      versao: APP_VERSION,
-      dataDir: config.dataDir,
-      url,
-      temFfmpeg: hasFfmpeg(),
-      trocouDePorta: trocou,
-      portaPedida: config.port,
-      herdouDoV1: heranca === 'adotado',
-      abrindoNavegador: abrindo,
-      plataforma: process.platform,
-    }).join('\n'),
-  );
+    console.log(
+      mensagemDeBoot({
+        versao: APP_VERSION,
+        dataDir: config.dataDir,
+        url,
+        temFfmpeg: hasFfmpeg(),
+        trocouDePorta: trocou,
+        portaPedida: config.port,
+        herdouDoV1: heranca === 'adotado',
+        abrindoNavegador: abrindo,
+        plataforma: process.platform,
+      }).join('\n'),
+    );
 
-  if (abrindo) abrirNavegador(url);
-} catch (err) {
-  console.error(`\n${err instanceof Error ? err.message : err}\n`);
-  process.exit(1);
+    if (abrindo) abrirNavegador(url);
+  } catch (err) {
+    console.error(`\n${err instanceof Error ? err.message : err}\n`);
+    process.exit(1);
+  }
 }
+
+void subir();

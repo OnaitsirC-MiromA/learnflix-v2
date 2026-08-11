@@ -23,13 +23,13 @@ Node >= 22, npm. Monorepo com dois workspaces: `server` e `web`.
 ```bash
 npm install                # primeira vez
 npm run dev                # Vite (:5173, faz proxy de /api → :7777) + Fastify (:7777), hot reload
-npm run build              # web → gerar-bundled → tipos do server → esbuild → dist/learnflix.js
-npm start                  # roda dist/learnflix.js (precisa do build antes)
+npm run build              # web → gerar-bundled → tipos do server → esbuild → dist/learnflix.cjs
+npm start                  # roda dist/learnflix.cjs (precisa do build antes)
 npm test                   # testes dos dois workspaces
 ```
 
 **O caminho de quem instala é `npx learnflix`** — um comando, sem clonar nada. O pacote publicado
-contém só `dist/learnflix.js` (campo `files`), então CLAUDE.md, DESIGN.md e PRODUCT.md ficam no
+contém só `dist/learnflix.cjs` (campo `files`), então CLAUDE.md, DESIGN.md e PRODUCT.md ficam no
 repositório e nunca chegam a quem usa.
 
 Um teste só:

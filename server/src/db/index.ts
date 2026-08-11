@@ -10,7 +10,14 @@ import { SCHEMA_V1 } from './schema';
 // Um require() é chamada de execução, então acontece depois do filtro estar de
 // pé. O `import type` acima não conta: tipos somem na compilação e não criam
 // dependência nenhuma em tempo de execução.
-const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as {
+//
+// O ternário cobre os dois formatos em que este código roda: empacotado em
+// CommonJS (onde require é nativo) e direto do fonte em ESM pelo tsx (onde não
+// é, e o createRequire resolve).
+declare const require: NodeJS.Require | undefined;
+const requerer: NodeJS.Require = typeof require === 'function' ? require : createRequire(import.meta.url);
+
+const { DatabaseSync } = requerer('node:sqlite') as {
   DatabaseSync: new (caminho: string) => TipoDoBanco;
 };
 
