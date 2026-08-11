@@ -1,0 +1,32 @@
+# Dependências
+node_modules/
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+
+# Dados de runtime (SQLite + miniaturas + convertidos) — nunca versionar
+server/data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Ambiente / logs
+.env
+.env.local
+*.log
+
+# SO / editores
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Ferramentas locais do agente. Os artefatos de design ficam versionados na
+# raiz: PRODUCT.md e DESIGN.md.
+.claude/settings.local.json
+.claude/skills/
+.impeccable/
+.playwright-mcp/
