@@ -73,6 +73,19 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
+      # Antes de qualquer trabalho: se o segredo não estiver lá, é melhor saber
+      # agora do que depois de baixar cinco binários e montar o pacote inteiro.
+      - name: Conferir o segredo do npm
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "::error::O segredo NPM_TOKEN está vazio ou não existe. Defina em Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "NPM_TOKEN presente (${#NODE_AUTH_TOKEN} caracteres)"
+
       - uses: actions/download-artifact@v4
         with: { path: artefatos, merge-multiple: true }
 
@@ -87,7 +100,13 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" artefatos/* --generate-notes --title "${GITHUB_REF_NAME}"
+        # Idempotente: numa reexecução a release já existe, e `create` falharia.
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" artefatos/* --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" artefatos/* --generate-notes --title "${GITHUB_REF_NAME}"
+          fi
 
       - run: npm ci
       - run: npm run build
