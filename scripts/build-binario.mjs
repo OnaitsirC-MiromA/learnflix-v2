@@ -9,6 +9,7 @@
 // Pré-requisitos: `npm run build` já ter rodado (o executável embute o
 // dist/learnflix.cjs).
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
@@ -69,8 +70,14 @@ if (ehMac) {
 }
 
 // 4. Injeta o blob.
+//
+// Chamando o postject pelo Node, e não por `npx`: no Windows o npx é um arquivo
+// .cmd, que o execFileSync não resolve sem ligar o shell — e ligar o shell
+// traria problema de aspas em caminhos com espaço. Resolver o script pelo
+// require é direto e igual nos três sistemas.
+const postject = createRequire(import.meta.url).resolve('postject/dist/cli.js');
 const argsPostject = [
-  'postject',
+  postject,
   executavel,
   'NODE_SEA_BLOB',
   path.join(build, 'learnflix.blob'),
@@ -78,7 +85,7 @@ const argsPostject = [
   'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2',
 ];
 if (ehMac) argsPostject.push('--macho-segment-name', 'NODE_SEA');
-execFileSync('npx', argsPostject, { stdio: 'inherit', cwd: raiz });
+execFileSync(process.execPath, argsPostject, { stdio: 'inherit', cwd: raiz });
 
 // 5. Assinatura ad-hoc: sem ela o macOS mata o processo com "killed: 9".
 if (ehMac) execFileSync('codesign', ['--sign', '-', executavel], { stdio: 'inherit' });
