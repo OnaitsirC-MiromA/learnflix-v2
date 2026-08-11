@@ -12,108 +12,57 @@ nada é enviado para lugar nenhum, nenhuma conta, nenhum login.
 
 ## Como rodar
 
-O Learnflix precisa de **uma coisa só: o Node.js 22 ou maior**. O ffmpeg é opcional — sem ele o app
-funciona inteiro, só não gera as capas nem lê a duração das aulas.
-
-Siga só a seção do seu sistema. Cada uma é completa do começo ao fim.
-
-<br>
-
-### 🍎 macOS
-
-**1. Instale o Node.js** (e já o ffmpeg, de quebra). Abra o **Terminal** e cole:
+Um comando. O mesmo nos três sistemas.
 
 ```bash
-brew install node ffmpeg
+npx learnflix
 ```
 
-<details>
-<summary>O comando falhou com <code>command not found: brew</code>?</summary>
+É isso. O navegador abre sozinho em `http://localhost:7777`. Nada de baixar o repositório, extrair
+ZIP, instalar dependências ou compilar — o download tem 563 KB e a instalação leva menos de um
+segundo.
 
 <br>
 
-Você ainda não tem o Homebrew. Instale-o primeiro — é uma vez só na vida da máquina:
+### O único requisito: Node 22.5 ou maior
 
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
+Se `npx` não for encontrado, é porque o Node ainda não está aí. Instalar é uma vez só na vida da
+máquina:
 
-Ao terminar, ele mostra um bloco **Next steps** com duas ou três linhas para você colar — cole-as,
-feche e reabra o Terminal, e então rode o `brew install node ffmpeg`.
+| Sistema | Comando |
+|---|---|
+| macOS | `brew install node` |
+| Windows | `winget install OpenJS.NodeJS.LTS` |
+| Linux | o pacote da sua distro, ou [nodejs.org](https://nodejs.org) |
 
-**Prefere não usar terminal para isso?** Baixe o instalador **LTS** em
-[nodejs.org](https://nodejs.org) — é próximo-próximo-concluir. O ffmpeg fica para depois (ou nunca,
-se você não fizer questão das capas).
-
-</details>
-
-**2. Baixe o Learnflix.** Aqui no GitHub: botão verde **Code → Download ZIP**. Dê dois cliques no
-arquivo baixado para descompactar.
-
-**3. Inicie.** No Terminal, digite `cd ` (com o espaço) e **arraste a pasta descompactada para dentro
-da janela** — o caminho se escreve sozinho. Aperte Enter e depois:
-
-```bash
-./start.sh
-```
-
-Se aparecer `permission denied`, use `bash start.sh` — funciona igual.
+Prefere clicar em vez de digitar? O instalador **LTS** em [nodejs.org](https://nodejs.org) é
+próximo-próximo-concluir. Feche e reabra o terminal depois.
 
 <br>
 
-### 🪟 Windows
+### Nas próximas vezes
 
-**1. Instale o Node.js** (e já o ffmpeg). Abra o **Terminal** ou o **PowerShell** e cole:
+Só repetir `npx learnflix`. Para garantir a versão mais nova, `npx learnflix@latest`.
 
-```powershell
-winget install OpenJS.NodeJS.LTS
-winget install Gyan.FFmpeg
-```
+Para parar, `Ctrl+C` no terminal.
 
-**Feche e reabra a janela do terminal depois.** É isso que faz o Windows enxergar o Node — pular
-esse passo é o motivo nº 1 de o `start.bat` reclamar que o Node não existe.
-
-<details>
-<summary>O comando <code>winget</code> não foi reconhecido?</summary>
-
-<br>
-
-Seu Windows é anterior ao 10 (1809) ou está sem o *App Installer*. Baixe o instalador **LTS** direto
-em [nodejs.org](https://nodejs.org) — é próximo-próximo-concluir — e, se quiser as capas, o ffmpeg em
-[ffmpeg.org/download](https://ffmpeg.org/download.html).
-
-</details>
-
-**2. Baixe o Learnflix.** Aqui no GitHub: botão verde **Code → Download ZIP**. Clique com o botão
-direito no arquivo baixado → **Extrair tudo**.
-
-**3. Inicie.** Abra a pasta extraída e dê **dois cliques no `start.bat`**. Só isso.
-
-<br>
-
-### 🐧 Linux
-
-Instale o Node 22+ pelo gerenciador da sua distro (ou pelo [nodejs.org](https://nodejs.org), se o
-pacote da distro estiver defasado) e, opcionalmente, o ffmpeg. Depois, na pasta do projeto:
-
-```bash
-./start.sh
-```
-
-<br>
-
-### Depois de iniciar
-
-Na primeira vez o Learnflix instala as dependências e compila a interface — costuma levar menos de um
-minuto. Aí o navegador abre sozinho em **`http://localhost:7777`**.
-
-- **Nas próximas vezes** é quase instantâneo: as dependências já estão no lugar e a compilação leva
-  uns 3 segundos. Se quiser pular até isso, `./start.sh fast`.
-- **Para parar**, `Ctrl+C` no terminal — no Windows, basta fechar a janela.
+**Se a porta 7777 estiver ocupada**, o app sobe na seguinte e avisa qual endereço usar — não é preciso
+fazer nada.
 
 ![Tela inicial vazia do Learnflix, com os botões Adicionar curso e Importar pasta de cursos](docs/tela-inicial.png)
 
 *É isso que aparece na primeira vez: sem cadastro, sem configuração — só apontar onde estão seus cursos.*
+
+<br>
+
+### Vindo do Learnflix v1?
+
+Se você rodar o `npx learnflix` **de dentro da pasta onde o v1 estava**, ele adota o banco de lá e
+avisa: seus cursos e seu progresso aparecem como estavam.
+
+De qualquer outro lugar — outra máquina, outro computador — o caminho é o arquivo de backup: no v1,
+botão **↓** na estante; aqui, **Configurações → Backup e migração → Importar arquivo…**. Veja
+[Backup e migração](#backup-e-migração).
 
 ---
 
@@ -205,15 +154,16 @@ plugado na hora, o curso entra assim mesmo, com todo o progresso: quando você c
 
 ## Seus dados
 
-Todo o progresso mora num único arquivo:
+Todo o progresso mora num único arquivo, **fora da pasta do app**:
 
 ```
-server/data/app.db
+~/.learnflix/app.db                      macOS e Linux
+%LOCALAPPDATA%\Learnflix\app.db          Windows
 ```
 
-Copiar esse arquivo também é um backup válido — mais bruto que o export acima, e preso a esta
-versão do app, mas serve. As miniaturas ficam em `server/data/thumbs/` e podem ser regeneradas a
-qualquer momento.
+Ficar fora é o que faz **atualizar não custar nada**: a versão nova substitui o programa e nem toca
+no banco. Copiar esse arquivo também é um backup válido — mais bruto que o export acima, mas serve.
+As miniaturas ficam em `thumbs/`, ao lado, e são regeneradas a qualquer momento.
 
 O progresso não está preso ao caminho da pasta: cada aula é identificada pelo lugar dela *dentro* do
 curso. Por isso, se você mover a pasta de um curso para outro disco, é só usar **Re-apontar
@@ -262,7 +212,7 @@ Tudo opcional, por variável de ambiente:
 |---|---|---|
 | `PORT` | `7777` | Porta do serviço |
 | `ALLOWED_ROOTS` | todo disco montado — veja abaixo | Restringe as pastas que o seletor pode navegar |
-| `DATA_DIR` | `server/data` | Onde ficam o banco e as miniaturas |
+| `DATA_DIR` | `~/.learnflix` | Onde ficam o banco e as miniaturas |
 | `OPEN_BROWSER` | `1` | `0` para não abrir o navegador sozinho |
 
 **HD externo funciona sem configurar nada.** Por padrão o seletor enxerga todos os discos montados:
@@ -274,7 +224,7 @@ detecção automática, útil se você roda o app num computador compartilhado e
 uma pasta só:
 
 ```bash
-PORT=8080 ALLOWED_ROOTS="/Volumes/HD-Cursos" ./start.sh
+PORT=8080 ALLOWED_ROOTS="/Volumes/HD-Cursos" npx learnflix
 ```
 
 Você também pode acrescentar pastas-raiz pela tela de **Configurações**, sem mexer em variável
@@ -287,14 +237,21 @@ nenhuma.
 Monorepo com dois workspaces: `server` (Fastify + SQLite) e `web` (React + Vite).
 
 ```bash
-./start.sh dev     # Vite em :5173 com hot reload, API em :7777
+git clone <este repositório> && cd learnflix && npm install
+npm run dev        # Vite em :5173 com hot reload, API em :7777
 npm test           # testes dos dois workspaces
-npm run build      # checagem de tipos + build de produção
+npm run build      # tipos + interface + dist/learnflix.js (o arquivo único)
+npm start          # roda o arquivo empacotado
 ```
 
 O servidor existe porque o navegador não consegue ler pastas do disco sozinho: ele lê as pastas
 (sempre só-leitura), transmite o vídeo por HTTP Range para o seek funcionar, gera as miniaturas e é
 dono do banco. A interface conversa com ele por uma API JSON.
+
+O `npm run build` gera `server/src/bundled.ts` — a interface em base64 mais a versão — e depois
+empacota tudo em `dist/learnflix.js` com o esbuild. É esse arquivo que o `npx` executa. O servidor
+tem **uma única dependência de execução** (Fastify) e nenhum módulo nativo: o SQLite vem embutido no
+próprio Node.
 
 O código e os comentários estão em português.
 

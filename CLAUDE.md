@@ -9,7 +9,7 @@ progresso confiável. Cada pasta escolhida vira um "curso"; o app escaneia, list
 módulos, materiais, duração e capas), transmite o vídeo por HTTP Range e guarda posição e conclusão
 no SQLite. Cursos podem ser agrupados em **bibliotecas** (coleções).
 
-É um projeto feito para ser **baixado e rodado por qualquer pessoa**: o único pré-requisito é o
+É um projeto feito para rodar **com um comando só** (`npx learnflix`): o único pré-requisito é o
 Node 22. Nada de contas, rede, nuvem, Docker ou serviços externos — se uma mudança introduzir um
 pré-requisito novo para quem só quer assistir seus cursos, ela está errada.
 
@@ -23,12 +23,14 @@ Node >= 22, npm. Monorepo com dois workspaces: `server` e `web`.
 ```bash
 npm install                # primeira vez
 npm run dev                # Vite (:5173, faz proxy de /api → :7777) + Fastify (:7777), hot reload
-npm run build              # web (tsc --noEmit && vite build) e depois server (tsc --noEmit)
-npm start                  # processo único: Fastify serve web/dist + API em :7777, abre o navegador
+npm run build              # web → gerar-bundled → tipos do server → esbuild → dist/learnflix.js
+npm start                  # roda dist/learnflix.js (precisa do build antes)
 npm test                   # testes dos dois workspaces
-
-./start.sh                 # build + start (é o caminho de quem baixou); `fast` pula o build; `dev` = npm run dev
 ```
+
+**O caminho de quem instala é `npx learnflix`** — um comando, sem clonar nada. O pacote publicado
+contém só `dist/learnflix.js` (campo `files`), então CLAUDE.md, DESIGN.md e PRODUCT.md ficam no
+repositório e nunca chegam a quem usa.
 
 Um teste só:
 
@@ -42,8 +44,9 @@ O servidor nunca emite JS; roda via `tsx`. Os imports são ESM **sem extensão d
 
 ## Variáveis de ambiente
 
-Lidas em `server/src/config.ts`: `PORT` (7777), `BIND` (127.0.0.1), `DATA_DIR` (`server/data` →
-guarda `app.db`, `thumbs/` e `converted/`), `ALLOWED_ROOTS` (separado por `:` ou `;`; padrão = home
+Lidas em `server/src/config.ts`: `PORT` (7777, e se estiver ocupada o app anda para a próxima —
+ver `listen.ts`), `BIND` (127.0.0.1), `DATA_DIR` (padrão `~/.learnflix`, ou `%LOCALAPPDATA%\Learnflix`
+no Windows → guarda `app.db`, `thumbs/` e `converted/`), `ALLOWED_ROOTS` (separado por `:` ou `;`; padrão = home
 do usuário, mais `/Volumes` no macOS e `/media`+`/mnt` no Linux), `AUTOCOMPLETE_THRESHOLD` (0.9),
 `OPEN_BROWSER`.
 
@@ -55,17 +58,30 @@ SQLite; a SPA React conversa com ele por uma API JSON.
 
 ### Servidor (`server/src`)
 
-- `index.ts` — bootstrap: carrega a config, cria os diretórios de dados, `openDb`, `buildApp`, escuta
-  e abre o navegador se `web/dist` existir.
+- `index.ts` — bootstrap, nesta ordem: `quiet` (tem de ser o **primeiro import**), config, herança do
+  v1, diretórios, `openDb`, `buildApp`, `escutarComFallback`, banner, navegador.
 - `app.ts` — `buildApp(config, db)` monta o Fastify e registra os plugins de rota. **Rota nova entra
-  aqui, no marcador `// [ROUTES]`.** Quando `web/dist` existe, também serve a SPA com fallback para
-  `index.html` em URLs que não começam com `/api`.
-- `db/` — `openDb` liga WAL e foreign keys e roda `migrate`, um runner guardado por
-  **`PRAGMA user_version`**. Para evoluir o schema, **acrescente um bloco `if (version < N)`** — nunca
-  edite o `SCHEMA_V1` no lugar.
+  aqui, no marcador `// [ROUTES]`.**
+- `spa.ts` — serve a interface a partir de `bundled.ts` (base64 embutido no build), com fallback para
+  a casca em URLs que não começam com `/api`. **Nada é lido do disco**: no v1 a SPA era procurada
+  relativa ao `cwd` e sumia se o processo subisse de outro lugar.
+- `bundled.ts` — **gerado** por `scripts/gerar-bundled.mjs` (interface + versão). Não versionado, não
+  editar à mão; `pretest`/`predev`/`build` o regeneram.
+- `db/` — `openDb` liga WAL e foreign keys e roda `migrate`, guardado por **`PRAGMA user_version`**.
+  Para evoluir o schema, **acrescente um bloco `if (version < N)`** — nunca edite o `SCHEMA_V1`.
+  O SQLite é o do próprio Node (`node:sqlite`), sem módulo nativo: entra por `require()` e não por
+  import estático, para o aviso de "experimental" poder ser filtrado (`quiet.ts`). Faltam os açúcares
+  do better-sqlite3, então use os helpers **`pragma(db, ...)`** e **`transaction(db, fn)`** daqui —
+  o segundo aninha com SAVEPOINT, porque o import chama `createCourseFromPath`, que já abre a sua.
+- `db/legacy.ts` — adota o banco do v1 quando o app sobe de dentro da pasta antiga. Nunca sobrescreve.
+- `backup/` — export/import da biblioteca: `format` (envelope + validação), `export`, `identify`
+  (mesmo curso por caminho ou impressão digital das aulas), `merge` (vence quem foi mais longe),
+  `import` (`planImport` puro + `applyImport`).
+- `listen.ts`, `banner.ts`, `abrir-navegador.ts` — porta ocupada, mensagem de boot e abrir o
+  navegador sem depender de pacote externo (o `open` não sobrevive ao empacotamento).
 - `routes/` — um plugin por arquivo (`fs`, `courses`, `lessons`, `stream`, `materials`, `thumbs`,
   `convert`, `collections`, `migration`, `settings`, `reset`, `info`, `health`). SQL cru com
-  prepared statements do `better-sqlite3`, mapeando as linhas snake_case para DTOs camelCase à mão.
+  prepared statements do `node:sqlite`, mapeando as linhas snake_case para DTOs camelCase à mão.
   `stream.ts` implementa o parsing de HTTP Range (é o que faz o seek funcionar). O `isWithinRoots`
   do `fs.ts` é a fronteira de segurança da navegação de pastas, reaproveitada pelo `courses.ts`.
 - `scan/` — a ingestão: `walk.ts` percorre a pasta separando vídeos de materiais (ignorando
