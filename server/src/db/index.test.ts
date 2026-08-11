@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { openDb } from './index';
+import { openDb, pragma } from './index';
 
 describe('openDb', () => {
   it('cria as tabelas e é idempotente', () => {
@@ -11,7 +11,7 @@ describe('openDb', () => {
     expect(tables).toEqual(
       expect.arrayContaining(['collections', 'course_roots', 'courses', 'lessons', 'materials', 'progress', 'settings']),
     );
-    expect(db.pragma('user_version', { simple: true })).toBe(1);
+    expect(pragma(db, 'user_version')).toBe(1);
     const cols = db.prepare('PRAGMA table_info(courses)').all().map((r: any) => r.name);
     expect(cols).toContain('cover_path');
     expect(cols).toContain('collection_id');
@@ -33,7 +33,7 @@ describe('openDb', () => {
 
   it('aplica FK on e WAL', () => {
     const db = openDb(':memory:');
-    expect(db.pragma('foreign_keys', { simple: true })).toBe(1);
+    expect(pragma(db, 'foreign_keys')).toBe(1);
     db.close();
   });
 });

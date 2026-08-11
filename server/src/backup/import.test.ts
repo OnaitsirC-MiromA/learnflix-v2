@@ -120,7 +120,7 @@ describe('applyImport', () => {
 describe('applyImport, fundindo com o que já existe', () => {
   // Monta um curso local de uma aula com o progresso dado, e devolve o que é
   // preciso para montar o arquivo de export correspondente.
-  function cenario(furthestLocal: number, over: Partial<Record<string, unknown>> = {}) {
+  function cenario(furthestLocal: number, over: { completed?: number; completedAt?: string | null } = {}) {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fusao-'));
     fs.writeFileSync(path.join(root, 'aula-01.mp4'), 'conteudo');
     const db = openDb(':memory:');

@@ -1,12 +1,12 @@
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { semRedundancia, systemRoots } from '../roots';
 
 const KEY = 'allowed_roots_extra';
 
-export function getAllowedRootsExtra(db: Database.Database): string[] {
+export function getAllowedRootsExtra(db: Db): string[] {
   const row = db.prepare('SELECT value FROM settings WHERE key=?').get(KEY) as { value: string } | undefined;
   if (!row) return [];
   try {
@@ -21,7 +21,7 @@ export function getAllowedRootsExtra(db: Database.Database): string[] {
 // configuradas em /settings — usada em todo guard que precisa aceitar pastas
 // navegáveis pelo /api/fs/browse (criar curso, re-apontar). Manter em um só lugar
 // evita divergência entre o que o seletor mostra e o que os guards aceitam.
-export function allowedRootsFor(config: AppConfig, db: Database.Database): string[] {
+export function allowedRootsFor(config: AppConfig, db: Db): string[] {
   // Quem definiu ALLOWED_ROOTS está restringindo de propósito (Docker, servidor
   // compartilhado): as unidades detectadas não entram, ou a restrição seria
   // burlada em silêncio.
@@ -29,7 +29,7 @@ export function allowedRootsFor(config: AppConfig, db: Database.Database): strin
   return semRedundancia([...config.allowedRoots, ...doSistema, ...getAllowedRootsExtra(db)]);
 }
 
-export async function settingsRoutes(app: FastifyInstance, opts: { db: Database.Database }): Promise<void> {
+export async function settingsRoutes(app: FastifyInstance, opts: { db: Db }): Promise<void> {
   const { db } = opts;
 
   app.get('/api/settings', async () => ({ allowedRootsExtra: getAllowedRootsExtra(db) }));

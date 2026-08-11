@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import { buildExport } from '../backup/export';
 import { applyImport, planImport } from '../backup/import';
 import { parseExport } from '../backup/format';
@@ -10,7 +10,7 @@ import { APP_VERSION } from './info';
 // tem centenas de cursos) é justamente quem seria barrado.
 const LIMITE_DO_ARQUIVO = 64 * 1024 * 1024;
 
-export async function backupRoutes(app: FastifyInstance, opts: { db: Database.Database }): Promise<void> {
+export async function backupRoutes(app: FastifyInstance, opts: { db: Db }): Promise<void> {
   const { db } = opts;
 
   app.get('/api/library/export', async (_req, reply) => {

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -30,7 +30,7 @@ export function parseRange(header: string | undefined, size: number): { start: n
   return { start, end };
 }
 
-export async function streamRoutes(app: FastifyInstance, opts: { db: Database.Database; config: AppConfig }): Promise<void> {
+export async function streamRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
 
   app.get('/api/lessons/:id/stream', (req, reply) => {

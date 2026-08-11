@@ -1,4 +1,4 @@
-import type Database from 'better-sqlite3';
+import { transaction, type Db } from '../db';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { walkCourseDir } from './walk';
@@ -9,7 +9,7 @@ import { deriveCourse } from './derive';
 // quer criar o curso não precisa saber; quem importa em lote precisa contar ao
 // usuário o que ficou de fora.
 export function createCourseFromPath(
-  db: Database.Database,
+  db: Db,
   rootPath: string,
   onUnreadable?: (caminhos: string[]) => void,
 ): string {
@@ -34,7 +34,7 @@ export function createCourseFromPath(
   `);
   const updatePoster = db.prepare('UPDATE courses SET poster_lesson_id=? WHERE id=?');
 
-  const tx = db.transaction(() => {
+  transaction(db, () => {
     insertCourse.run({
       id: courseId,
       title: path.basename(rootPath),
@@ -75,7 +75,6 @@ export function createCourseFromPath(
       updatePoster.run(firstLessonId, courseId);
     }
   });
-  tx();
 
   return courseId;
 }

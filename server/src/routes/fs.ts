@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { allowedRootsFor } from './settings';
 
@@ -23,7 +23,7 @@ export function isWithinRoots(target: string, roots: string[]): boolean {
   });
 }
 
-export async function fsRoutes(app: FastifyInstance, opts: { config: AppConfig; db: Database.Database }): Promise<void> {
+export async function fsRoutes(app: FastifyInstance, opts: { config: AppConfig; db: Db }): Promise<void> {
   const { config, db } = opts;
   const roots = () => allowedRootsFor(config, db);
 

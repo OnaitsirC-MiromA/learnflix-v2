@@ -1,4 +1,4 @@
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import { getAllowedRootsExtra } from '../routes/settings';
 import {
   FORMAT,
@@ -14,7 +14,7 @@ import {
 // A versão do app entra por parâmetro em vez de ser lida daqui: ler o
 // package.json a partir do cwd amarra o export ao diretório de onde o processo
 // subiu, e é exatamente o tipo de coisa que quebra num executável empacotado.
-export function buildExport(db: Database.Database, appVersion = 'dev'): LibraryExport {
+export function buildExport(db: Db, appVersion = 'dev'): LibraryExport {
   const collections = (
     db.prepare('SELECT id, name, created_at, sort_index FROM collections ORDER BY sort_index, rowid').all() as any[]
   ).map(

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import type Database from 'better-sqlite3';
+import { transaction, type Db } from '../db';
 import type { AppConfig } from '../config';
 import type { DerivedLesson } from './derive';
 import { walkCourseDir } from './walk';
@@ -85,12 +85,12 @@ export interface ReconcileResult {
 }
 export type RootUnavailable = { status: 'root_unavailable' };
 
-function prepare(db: Database.Database, courseId: string, targetPath: string) {
+function prepare(db: Db, courseId: string, targetPath: string) {
   const { videos, materials, unreadable } = walkCourseDir(targetPath);
   const derived = deriveCourse(videos);
   const existing = db
     .prepare('SELECT id, rel_path, mtime, order_index FROM lessons WHERE course_id=?')
-    .all(courseId) as ExistingLesson[];
+    .all(courseId) as unknown as ExistingLesson[];
   const bruto = planReconcile(existing, derived.lessons, derived.structure);
 
   // Um arquivo que a listagem mostrou mas o stat não alcançou (típico de
@@ -119,7 +119,7 @@ function rootOk(targetPath: string): boolean {
 }
 
 export function previewReconcile(
-  db: Database.Database,
+  db: Db,
   _config: AppConfig,
   courseId: string,
   opts?: { newRootPath?: string },
@@ -139,7 +139,7 @@ export function previewReconcile(
 }
 
 export function reconcileCourse(
-  db: Database.Database,
+  db: Db,
   _config: AppConfig,
   courseId: string,
   opts?: { newRootPath?: string },
@@ -175,7 +175,7 @@ export function reconcileCourse(
   `);
   const deleteMaterial = db.prepare('DELETE FROM materials WHERE course_id=? AND rel_path=?');
 
-  const tx = db.transaction(() => {
+  transaction(db, () => {
     for (const m of [...plan.matched, ...plan.relinked]) {
       const d = m.derived;
       updateLesson.run({
@@ -222,7 +222,6 @@ export function reconcileCourse(
       db.prepare('UPDATE courses SET poster_lesson_id=? WHERE id=?').run(first?.id ?? null, courseId);
     }
   });
-  tx();
 
   return {
     matched: plan.matched.length,

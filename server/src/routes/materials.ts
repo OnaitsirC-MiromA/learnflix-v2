@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { allowedRootsFor } from './settings';
 import { isWithinRoots } from './fs';
@@ -22,7 +22,7 @@ const CONTENT_TYPES: Record<string, string> = {
 };
 const INLINE = new Set(['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'txt', 'md']);
 
-export async function materialsRoutes(app: FastifyInstance, opts: { db: Database.Database; config: AppConfig }): Promise<void> {
+export async function materialsRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
 
   // Serve o arquivo de um material. O caminho vem do BANCO (não do usuário), e

@@ -2,7 +2,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fs from 'node:fs';
 import path from 'node:path';
-import type Database from 'better-sqlite3';
+import type { Db } from './db';
 import type { AppConfig } from './config';
 import { healthRoutes } from './routes/health';
 import { fsRoutes } from './routes/fs';
@@ -20,7 +20,7 @@ import { materialsRoutes } from './routes/materials';
 import { swRoutes } from './routes/sw';
 import { backupRoutes } from './routes/backup';
 
-export function buildApp(config: AppConfig, db: Database.Database): FastifyInstance {
+export function buildApp(config: AppConfig, db: Db): FastifyInstance {
   const app = Fastify({ logger: false });
 
   // Tolera corpo vazio em application/json: um POST/DELETE sem corpo (ex.: rescan, excluir)

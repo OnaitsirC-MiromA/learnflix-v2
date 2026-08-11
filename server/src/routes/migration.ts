@@ -1,13 +1,13 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { isWithinRoots } from './fs';
 import { allowedRootsFor } from './settings';
 import { previewReconcile, reconcileCourse } from '../scan/reconcile';
 
-export async function migrationRoutes(app: FastifyInstance, opts: { db: Database.Database; config: AppConfig }): Promise<void> {
+export async function migrationRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
 
   const validatePath = (raw: unknown): { ok: true; path: string } | { ok: false; code: number } => {

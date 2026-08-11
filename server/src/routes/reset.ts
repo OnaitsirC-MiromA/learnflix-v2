@@ -1,13 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import { transaction, type Db } from '../db';
 import type { AppConfig } from '../config';
 
 // Reset de progresso e da biblioteca. Progresso é o bem mais valioso do app,
 // então cada alcance tem sua rota explícita (nada de DELETE genérico) e a UI
 // sempre confirma antes. Nenhuma rota aqui toca nos vídeos do acervo.
-export async function resetRoutes(app: FastifyInstance, opts: { db: Database.Database; config: AppConfig }): Promise<void> {
+export async function resetRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
 
   // Zera o progresso de UM curso (posições, concluídas). Aulas e curso ficam.
@@ -29,10 +29,10 @@ export async function resetRoutes(app: FastifyInstance, opts: { db: Database.Dat
   // que os nomeiam morrem junto). settings sobrevive; o acervo nunca é tocado.
   app.post('/api/library/reset', async () => {
     const before = (db.prepare('SELECT COUNT(*) c FROM courses').get() as { c: number }).c;
-    db.transaction(() => {
+    transaction(db, () => {
       db.prepare('DELETE FROM courses').run();
       db.prepare('DELETE FROM collections').run();
-    })();
+    });
     for (const dir of [config.thumbsDir, config.convertedDir]) {
       try {
         for (const f of fs.readdirSync(dir)) fs.rmSync(path.join(dir, f), { recursive: true, force: true });

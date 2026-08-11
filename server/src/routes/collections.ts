@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 
 // Coleções: grupos nomeados de cursos, criados manualmente pelo dono do acervo.
 // Excluir uma coleção nunca toca nos cursos (FK ON DELETE SET NULL na migração v3).
-export async function collectionsRoutes(app: FastifyInstance, opts: { db: Database.Database }): Promise<void> {
+export async function collectionsRoutes(app: FastifyInstance, opts: { db: Db }): Promise<void> {
   const { db } = opts;
 
   app.get('/api/collections', async () => {

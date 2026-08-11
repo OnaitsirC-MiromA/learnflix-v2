@@ -2,7 +2,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { createCourseFromPath } from '../scan/scan-course';
 import { walkCourseDir } from '../scan/walk';
@@ -10,7 +10,7 @@ import { reconcileCourse } from '../scan/reconcile';
 import { isWithinRoots } from './fs';
 import { allowedRootsFor } from './settings';
 
-export async function coursesRoutes(app: FastifyInstance, opts: { db: Database.Database; config: AppConfig }): Promise<void> {
+export async function coursesRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
 
   app.post('/api/courses', async (req, reply) => {

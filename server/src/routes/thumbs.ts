@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { existsSync } from 'node:fs';
 import type { FastifyInstance, FastifyReply } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { getOrCreateLessonThumb, setCourseCover } from '../media/thumbs';
 
@@ -11,7 +11,7 @@ function sendImage(reply: FastifyReply, filePath: string) {
   return reply.send(fs.createReadStream(filePath));
 }
 
-export async function thumbsRoutes(app: FastifyInstance, opts: { db: Database.Database; config: AppConfig }): Promise<void> {
+export async function thumbsRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
 
   app.get('/api/lessons/:id/thumb', async (req, reply) => {

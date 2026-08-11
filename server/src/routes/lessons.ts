@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 
-export async function lessonsRoutes(app: FastifyInstance, opts: { db: Database.Database }): Promise<void> {
+export async function lessonsRoutes(app: FastifyInstance, opts: { db: Db }): Promise<void> {
   const { db } = opts;
 
   app.get('/api/lessons/:id', async (req, reply) => {

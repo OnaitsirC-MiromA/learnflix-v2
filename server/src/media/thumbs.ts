@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { existsSync } from 'node:fs';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { hasFfmpeg, probeDurationSec, extractFrame } from './ffmpeg';
 
@@ -25,7 +25,7 @@ function videoAbsPath(rootPath: string, relPath: string): string {
 }
 
 export async function getOrCreateLessonThumb(
-  db: Database.Database,
+  db: Db,
   config: AppConfig,
   lessonId: string,
 ): Promise<string | null> {
@@ -62,7 +62,7 @@ export async function getOrCreateLessonThumb(
 }
 
 export async function setCourseCover(
-  db: Database.Database,
+  db: Db,
   config: AppConfig,
   courseId: string,
   lessonId: string,

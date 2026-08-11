@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { classifyPlayback, hasFfmpeg, probeFormat, remuxToMp4, validateConverted } from '../media/ffmpeg';
 
@@ -13,7 +13,7 @@ import { classifyPlayback, hasFfmpeg, probeFormat, remuxToMp4, validateConverted
 // recodificar são reportados com 409 para a UI explicar, e não convertidos aqui:
 // recodificar é lento, com perda, e melhor feito por fora com uma ferramenta
 // dedicada.
-export async function convertRoutes(app: FastifyInstance, opts: { db: Database.Database; config: AppConfig }): Promise<void> {
+export async function convertRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
 
   const lessonPath = (id: string): { file: string; courseId: string } | null => {

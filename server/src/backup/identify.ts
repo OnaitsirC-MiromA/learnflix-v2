@@ -1,4 +1,4 @@
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { ExportedCourse } from './format';
 
 // Quanto dois conjuntos de aulas precisam coincidir para serem "o mesmo curso".
@@ -19,7 +19,7 @@ function semelhanca(a: Set<string>, b: Set<string>): number {
 // Duas passadas, em ordem de confiança:
 //   1. mesmo root_path — mesma máquina, certeza absoluta;
 //   2. impressão digital das aulas — o curso mudou de disco ou de sistema.
-export function matchCourse(db: Database.Database, doArquivo: ExportedCourse): string | null {
+export function matchCourse(db: Db, doArquivo: ExportedCourse): string | null {
   const mesmoCaminho = db.prepare('SELECT id FROM courses WHERE root_path=?').get(doArquivo.rootPath) as
     | { id: string }
     | undefined;

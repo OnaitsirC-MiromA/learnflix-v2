@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import type Database from 'better-sqlite3';
+import { transaction, type Db } from '../db';
 import { PLAYABLE_EXTS } from '../scan/derive';
 import { createCourseFromPath } from '../scan/scan-course';
 import { getAllowedRootsExtra } from '../routes/settings';
@@ -59,7 +59,7 @@ export interface ImportPlan {
  * reconhecimento que o applyImport, para a prévia não prometer uma coisa e a
  * importação fazer outra.
  */
-export function planImport(db: Database.Database, data: LibraryExport): ImportPlan {
+export function planImport(db: Db, data: LibraryExport): ImportPlan {
   const colecaoPorNome = db.prepare('SELECT id FROM collections WHERE lower(trim(name)) = lower(trim(?))');
 
   const plano: ImportPlan = {
@@ -112,7 +112,7 @@ export function planImport(db: Database.Database, data: LibraryExport): ImportPl
  * regra do mais avançado, e escolhas locais (capa, biblioteca, título renomeado)
  * têm precedência sobre as do arquivo — quem está na máquina decidiu por último.
  */
-export function applyImport(db: Database.Database, data: LibraryExport): void {
+export function applyImport(db: Db, data: LibraryExport): void {
   const now = new Date().toISOString();
 
   const insertCourse = db.prepare(`
@@ -190,7 +190,7 @@ export function applyImport(db: Database.Database, data: LibraryExport): void {
     return courseId;
   };
 
-  const tx = db.transaction(() => {
+  transaction(db, () => {
     // Biblioteca é um rótulo que a pessoa deu, não um id: duas máquinas com uma
     // "Programação" cada têm a MESMA biblioteca, ainda que os ids não batam.
     const idLocalDaColecao = new Map<string, string>();
@@ -268,5 +268,4 @@ export function applyImport(db: Database.Database, data: LibraryExport): void {
     const raizes = [...new Set([...getAllowedRootsExtra(db), ...data.settings.allowedRootsExtra])];
     if (raizes.length) gravaSetting.run('allowed_roots_extra', JSON.stringify(raizes));
   });
-  tx();
 }

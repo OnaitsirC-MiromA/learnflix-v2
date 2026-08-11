@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import type Database from 'better-sqlite3';
+import type { Db } from '../db';
 import type { AppConfig } from '../config';
 import { reconcileCourse } from './reconcile';
 import { loadConfig } from '../config';
@@ -51,13 +51,13 @@ export interface BatchRepointResult {
 // novo caminho não existe/não é diretório — não deixa a biblioteca meio-migrada em
 // silêncio. Processa TODOS os cursos (inclusive arquivados): mover o acervo é total.
 export function runBatchRepoint(
-  db: Database.Database,
+  db: Db,
   config: AppConfig,
   fromPrefix: string,
   toPrefix: string,
   onProgress?: (item: RepointPlanItem) => void,
 ): BatchRepointResult {
-  const courses = db.prepare('SELECT id, title, root_path FROM courses ORDER BY rowid').all() as CourseRow[];
+  const courses = db.prepare('SELECT id, title, root_path FROM courses ORDER BY rowid').all() as unknown as CourseRow[];
   const plan = planBatchRepoint(courses, fromPrefix, toPrefix);
   const succeeded: BatchRepointResult['succeeded'] = [];
 
