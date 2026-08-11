@@ -24,10 +24,42 @@ segundo.
 
 <br>
 
-### O único requisito: Node 22.5 ou maior
+### Não tem Node? Então nem precisa instalar
 
-Se `npx` não for encontrado, é porque o Node ainda não está aí. Instalar é uma vez só na vida da
-máquina:
+Um comando também, e sem pré-requisito nenhum. Ele baixa o Learnflix já pronto para o seu sistema,
+confere a soma de verificação e põe no seu PATH:
+
+```bash
+# macOS e Linux
+curl -fsSL https://raw.githubusercontent.com/OnaitsirC-MiromA/learnflix-v2/main/install.sh | sh
+```
+
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/OnaitsirC-MiromA/learnflix-v2/main/install.ps1 | iex
+```
+
+Depois é só `learnflix`, de qualquer pasta.
+
+O download tem cerca de 110 MB porque o Node vai embutido dentro dele — é esse o preço de não
+precisar instalar nada. Se você já tem Node, o `npx` acima baixa 563 KB e faz o mesmo.
+
+<details>
+<summary>O Windows mostrou um aviso de "aplicativo não reconhecido"?</summary>
+
+<br>
+
+É o SmartScreen: ele desconfia de todo executável novo que não tenha um certificado pago de
+assinatura. **Mais informações → Executar assim mesmo**. No macOS isso não acontece — arquivo
+baixado por `curl` não recebe a marca de quarentena que o Gatekeeper usa.
+
+</details>
+
+<br>
+
+### Se preferir instalar o Node
+
+O `npx` precisa dele. É uma vez só na vida da máquina:
 
 | Sistema | Comando |
 |---|---|
@@ -42,7 +74,8 @@ próximo-próximo-concluir. Feche e reabra o terminal depois.
 
 ### Nas próximas vezes
 
-Só repetir `npx learnflix`. Para garantir a versão mais nova, `npx learnflix@latest`.
+Só repetir `npx learnflix` (ou `learnflix`, se você usou o instalador). Para garantir a versão mais
+nova pelo npx, `npx learnflix@latest`.
 
 Para parar, `Ctrl+C` no terminal.
 

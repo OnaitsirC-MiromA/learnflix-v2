@@ -1,0 +1,98 @@
+name: Release
+
+# Publica uma versão: os executáveis de cada sistema no GitHub Releases e o
+# pacote no npm. Dispara por tag (v2.0.0, v2.1.0…).
+on:
+  push:
+    tags: ['v*']
+  # Permite ensaiar o build da matriz sem publicar nada.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  # Testar uma vez só, antes de gastar a matriz inteira: se a suíte quebra, não
+  # há por que construir cinco binários.
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  binarios:
+    needs: testar
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14,       alvo: darwin-arm64, artefato: learnflix-darwin-arm64 }
+          - { os: macos-13,       alvo: darwin-x64,   artefato: learnflix-darwin-x64 }
+          - { os: ubuntu-latest,  alvo: linux-x64,    artefato: learnflix-linux-x64 }
+          - { os: ubuntu-24.04-arm, alvo: linux-arm64, artefato: learnflix-linux-arm64 }
+          - { os: windows-latest, alvo: win32-x64,    artefato: learnflix-win32-x64.exe }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:binario
+
+      # O executável sai sempre com o mesmo nome; renomear aqui é o que permite
+      # o instalador escolher o arquivo certo pelo nome.
+      - name: Renomear para o alvo
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            mv build/learnflix.exe "build/${{ matrix.artefato }}"
+          else
+            mv build/learnflix "build/${{ matrix.artefato }}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artefato }}
+          path: build/${{ matrix.artefato }}
+          retention-days: 1
+
+  publicar:
+    needs: binarios
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - uses: actions/download-artifact@v4
+        with: { path: artefatos, merge-multiple: true }
+
+      # É esta lista que o instalador confere antes de instalar qualquer coisa.
+      - name: Somas SHA-256
+        run: |
+          cd artefatos
+          sha256sum learnflix-* > checksums.txt
+          cat checksums.txt
+
+      - name: Publicar a release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" artefatos/* --generate-notes --title "${GITHUB_REF_NAME}"
+
+      - run: npm ci
+      - run: npm run build
+      - name: Publicar no npm
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
