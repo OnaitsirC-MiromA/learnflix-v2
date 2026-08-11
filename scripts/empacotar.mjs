@@ -13,6 +13,10 @@ import url from 'node:url';
 const raiz = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 const saida = path.join(raiz, 'dist', 'learnflix.cjs');
 
+// Limpa a pasta antes: sobra de um build anterior (outro formato, outro nome)
+// seria publicada junto e dobraria o download sem servir para nada.
+fs.rmSync(path.dirname(saida), { recursive: true, force: true });
+
 const resultado = await esbuild.build({
   entryPoints: [path.join(raiz, 'server', 'src', 'index.ts')],
   outfile: saida,
