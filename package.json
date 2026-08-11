@@ -41,7 +41,8 @@
     "start": "node dist/learnflix.cjs",
     "build:binario": "node scripts/build-binario.mjs",
     "pretest": "node scripts/gerar-bundled.mjs",
-    "test": "npm run test --workspace=server && npm run test --workspace=web"
+    "test": "npm run test --workspace=server && npm run test --workspace=web",
+    "repo": "node scripts/definir-repo.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
