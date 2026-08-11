@@ -1,16 +1,15 @@
 // Primeiro import de todos, de propósito — ver quiet.ts.
 import './quiet';
-import open from 'open';
+import { abrirNavegador } from './abrir-navegador';
 import fs from 'node:fs';
-import path from 'node:path';
 import { loadConfig } from './config';
+import { APP_VERSION, WEB_ASSETS } from './bundled';
 import { openDb } from './db/index';
 import { herdarDadosDoV1 } from './db/legacy';
 import { buildApp } from './app';
 import { escutarComFallback } from './listen';
 import { mensagemDeBoot } from './banner';
 import { hasFfmpeg } from './media/ffmpeg';
-import { APP_VERSION } from './routes/info';
 
 const config = loadConfig();
 
@@ -25,7 +24,8 @@ for (const dir of [config.dataDir, config.thumbsDir, config.convertedDir]) {
 
 const db = openDb(config.dbPath);
 const app = buildApp(config, db);
-const webDist = path.resolve(process.cwd(), '..', 'web', 'dist');
+// Sem interface embutida (desenvolvimento), quem abre o navegador é o Vite.
+const temInterface = Boolean(WEB_ASSETS['/index.html']);
 
 const shutdown = () => {
   app.close().finally(() => process.exit(0));
@@ -36,7 +36,7 @@ process.on('SIGINT', shutdown);
 try {
   const { port, trocou } = await escutarComFallback(app, config.port, config.bind);
   const url = `http://localhost:${port}`;
-  const abrindo = config.openBrowser && fs.existsSync(webDist);
+  const abrindo = config.openBrowser && temInterface;
 
   console.log(
     mensagemDeBoot({
@@ -52,7 +52,7 @@ try {
     }).join('\n'),
   );
 
-  if (abrindo) open(url).catch(() => {});
+  if (abrindo) abrirNavegador(url);
 } catch (err) {
   console.error(`\n${err instanceof Error ? err.message : err}\n`);
   process.exit(1);

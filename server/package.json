@@ -10,9 +10,7 @@
     "repoint": "tsx src/scan/repoint-prefix.ts"
   },
   "dependencies": {
-    "@fastify/static": "^10.1.3",
     "fastify": "^5.1.0",
-    "open": "^10.1.0",
     "tsx": "^4.19.2"
   },
   "devDependencies": {

@@ -1,23 +1,13 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { hasFfmpeg } from '../media/ffmpeg';
+import { APP_VERSION } from '../bundled';
 
-// Versão mostrada no rodapé das Configurações: vem do package.json da raiz
-// (o servidor roda com cwd em server/). Lido uma vez no boot; 'dev' se falhar.
-function readVersion(): string {
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '..', 'package.json'), 'utf8')) as { version?: string };
-    return pkg.version ?? 'dev';
-  } catch {
-    return 'dev';
-  }
-}
-
-// Exportada porque o arquivo de export registra de qual versão ele saiu.
-export const APP_VERSION = readVersion();
-const VERSION = APP_VERSION;
+// A versão vem do módulo gerado pelo build, e não de uma leitura do package.json
+// relativa ao diretório de onde o processo subiu. A leitura antiga dava "dev"
+// sempre que o app era iniciado de outro lugar — e num executável único não
+// haveria package.json nenhum para ler.
+export { APP_VERSION };
 
 export async function infoRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/api/info', async () => ({ ffmpeg: hasFfmpeg(), version: VERSION }));
+  app.get('/api/info', async () => ({ ffmpeg: hasFfmpeg(), version: APP_VERSION }));
 }

@@ -30,3 +30,7 @@ server/data/
 .claude/skills/
 .impeccable/
 .playwright-mcp/
+
+# Gerado pelo build (scripts/gerar-bundled.mjs) — a interface em base64 e a
+# versão. Não versionar: é derivado de web/dist e do package.json.
+server/src/bundled.ts

@@ -1,8 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
-import fastifyStatic from '@fastify/static';
-import fs from 'node:fs';
-import path from 'node:path';
 import type { Db } from './db';
+import { registrarSpa } from './spa';
+import { WEB_ASSETS } from './bundled';
 import type { AppConfig } from './config';
 import { healthRoutes } from './routes/health';
 import { fsRoutes } from './routes/fs';
@@ -53,14 +52,8 @@ export function buildApp(config: AppConfig, db: Db): FastifyInstance {
   app.register(backupRoutes, { db });
   // [ROUTES]
 
-  const webDist = path.resolve(process.cwd(), '..', 'web', 'dist');
-  if (fs.existsSync(webDist)) {
-    app.register(fastifyStatic, { root: webDist });
-    app.setNotFoundHandler((req, reply) => {
-      if (req.url.startsWith('/api')) reply.code(404).send({ error: 'not_found' });
-      else reply.sendFile('index.html');
-    });
-  }
+  // A interface vem embutida no build, não do disco — ver spa.ts.
+  registrarSpa(app, WEB_ASSETS);
 
   return app;
 }
