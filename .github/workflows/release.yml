@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-14,       alvo: darwin-arm64, artefato: learnflix-darwin-arm64 }
+          - { os: macos-15,       alvo: darwin-arm64, artefato: learnflix-darwin-arm64 }
           - { os: macos-15-intel, alvo: darwin-x64,   artefato: learnflix-darwin-x64 }
           - { os: ubuntu-latest,  alvo: linux-x64,    artefato: learnflix-linux-x64 }
           - { os: ubuntu-24.04-arm, alvo: linux-arm64, artefato: learnflix-linux-arm64 }
