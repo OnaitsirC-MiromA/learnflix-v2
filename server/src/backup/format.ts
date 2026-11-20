@@ -1,10 +1,11 @@
+import { validCatalog, sourceAddress, type TelegramCatalog } from '../telegram/catalog';
 import type { Structure } from '../types';
 
 // Marca do formato: é o que separa um arquivo do Learnflix de um JSON qualquer
 // que a pessoa escolheu por engano. A versão sobe quando o formato mudar de um
 // jeito que versões antigas não conseguem ler.
 export const FORMAT = 'learnflix-library';
-export const VERSION = 1;
+export const VERSION = 2;
 
 // Formato do arquivo de export/import da biblioteca.
 //
@@ -24,6 +25,7 @@ export interface ProgressState {
 }
 
 export interface ExportedLesson {
+  telegramMessageId?: number;
   relPath: string;
   module: string | null;
   title: string;
@@ -47,6 +49,7 @@ export interface ExportedCollection {
 }
 
 export interface ExportedCourse {
+  telegram?: TelegramCatalog;
   title: string;
   rootPath: string;
   structure: Structure;
@@ -83,6 +86,16 @@ export function parseExport(raw: unknown): ParseResult {
   }
   if (!Array.isArray(o.courses)) {
     return { ok: false, error: 'A lista de cursos deste arquivo está corrompida.' };
+  }
+
+  for (const course of o.courses as ExportedCourse[]) {
+    if (course?.telegram !== undefined) {
+      const source = sourceAddress(course.rootPath);
+      if (!validCatalog(course.telegram) || !source || source.chatId !== course.telegram.chatId || source.topicId !== course.telegram.topicId
+        || !Array.isArray(course.lessons) || course.lessons.some(l => !Number.isSafeInteger(l.telegramMessageId) || l.telegramMessageId! <= 0)) {
+        return { ok: false, error: 'O catálogo Telegram deste arquivo está corrompido.' };
+      }
+    }
   }
 
   // Seções que vieram depois podem faltar num export antigo: ausência não é

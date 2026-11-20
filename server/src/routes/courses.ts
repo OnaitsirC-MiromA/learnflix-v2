@@ -119,6 +119,7 @@ export async function coursesRoutes(app: FastifyInstance, opts: { db: Db; config
     return courses.map((c) => {
       const agg = aggStmt.get(c.id) as any;
       return {
+        sourceKind: c.source_kind,
         id: c.id, title: c.title, structure: c.structure,
         totalLessons: agg.total, completedLessons: agg.completed, inProgressLessons: agg.inprogress,
         posterLessonId: c.poster_lesson_id, lastActivityAt: agg.last_at ?? null,
@@ -164,6 +165,7 @@ export async function coursesRoutes(app: FastifyInstance, opts: { db: Db; config
     }));
 
     return {
+      sourceKind: course.source_kind,
       id: course.id, title: course.title, structure: course.structure, rootPath: course.root_path,
       totalLessons: rows.length, completedLessons, materialsCount: materials.length, modules, materials,
       collectionId: course.collection_id ?? null,

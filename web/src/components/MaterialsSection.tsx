@@ -18,7 +18,7 @@ const KIND_LABEL: Record<MaterialDTO['kind'], string> = {
 
 type Viewer = { kind: 'pdf' | 'image'; id: string; name: string } | null;
 
-export default function MaterialsSection({ materials }: { materials: MaterialDTO[] }) {
+export default function MaterialsSection({ materials, remote = false }: { materials: MaterialDTO[]; remote?: boolean }) {
   const [viewer, setViewer] = useState<Viewer>(null);
 
   // Agrupa por módulo (null = raiz do curso), preservando a ordem recebida.
@@ -39,7 +39,8 @@ export default function MaterialsSection({ materials }: { materials: MaterialDTO
     <section className="mt-10">
       <h2 className="mb-1 text-sm font-semibold text-neutral-300">Materiais adicionais</h2>
       <p className="mb-3 text-sm text-neutral-500">
-        {materials.length} arquivo{materials.length === 1 ? '' : 's'} do curso — PDFs, imagens e anexos. Abra aqui ou baixe.
+        {materials.length} arquivo{materials.length === 1 ? '' : 's'} do curso — PDFs, imagens e anexos.{' '}
+        {remote ? 'Cada arquivo é transferido do Telegram somente quando você o baixa.' : 'Abra aqui ou baixe.'}
       </p>
 
       <div className="space-y-6">
@@ -48,7 +49,7 @@ export default function MaterialsSection({ materials }: { materials: MaterialDTO
             {mod && <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">{mod}</h3>}
             <div className="space-y-1.5">
               {items.map((m) => {
-                const canView = m.kind === 'pdf' || m.kind === 'image';
+                const canView = !remote && (m.kind === 'pdf' || m.kind === 'image');
                 return (
                   <div key={m.id} className="flex items-center gap-3 rounded-lg bg-neutral-900 px-3 py-2">
                     <span className="grid h-9 w-11 shrink-0 place-items-center rounded bg-neutral-800 text-[10px] font-semibold tracking-wide text-neutral-400">

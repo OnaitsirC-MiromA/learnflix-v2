@@ -1,0 +1,11 @@
+.git
+node_modules
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.session*
+**/*.key
+**/.env*
+web/dist
+courses
+runtime

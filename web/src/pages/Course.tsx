@@ -33,6 +33,7 @@ export default function Course() {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!data || data.sourceKind === 'telegram') return;
     let cancelled = false;
     api
       .rescan(id)
@@ -50,7 +51,7 @@ export default function Course() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, data?.id, data?.sourceKind]);
 
   if (isLoading || !data) {
     return (
@@ -107,7 +108,13 @@ export default function Course() {
 
       <h1 className="mt-4 text-2xl font-semibold tracking-tight text-balance sm:text-3xl">{data.title}</h1>
 
-      {rootIssue && (
+      {data.sourceKind === 'telegram' && (
+        <p className="mt-3 text-sm text-neutral-400">
+          Origem: Telegram · A conexão com o Telegram é necessária para assistir e acessar os anexos.
+          O progresso fica salvo neste Learnflix.
+        </p>
+      )}
+      {rootIssue && data.sourceKind !== 'telegram' && (
         <div className="mt-4">
           <Banner>
             Pasta do curso indisponível — se ela mudou de lugar, re-aponte pelo menu ⋯.{' '}
@@ -118,7 +125,10 @@ export default function Course() {
       {!rootIssue && allLessons.some((l) => l.missing) && (
         <div className="mt-4">
           <Banner>
-            {allLessons.filter((l) => l.missing).length} aula(s) não encontrada(s). Re-aponte a pasta pelo menu ⋯ para recuperar.
+            {allLessons.filter((l) => l.missing).length} aula(s) não encontrada(s).{' '}
+            {data.sourceKind === 'telegram'
+              ? 'Use “Atualizar lista do Telegram” no menu ⋯ para conferir o acesso. O progresso foi mantido.'
+              : 'Re-aponte a pasta pelo menu ⋯ para recuperar.'}
           </Banner>
         </div>
       )}
@@ -223,7 +233,7 @@ export default function Course() {
                         onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = 'hidden')}
                       />
                       <span className="w-8 shrink-0 text-center text-xs text-neutral-600">{l.missing ? '—' : l.orderIndex + 1}</span>
-                      <span className="flex-1 truncate">{l.title}</span>
+                      <span className="min-w-0 flex-1 break-words line-clamp-2" title={`${l.title}\nOriginal: ${l.relPath.split('/').pop()}`}>{l.title}</span>
                       <span className="shrink-0 text-xs text-neutral-500">{formatDuration(l.durationSec)}</span>
                       <span className="w-auto shrink-0 text-right text-xs sm:w-28">
                         {l.missing ? (
@@ -264,7 +274,7 @@ export default function Course() {
         ))}
       </div>
 
-      <MaterialsSection materials={data.materials} />
+      <MaterialsSection remote={data.sourceKind === 'telegram'} materials={data.materials} />
       </div>
     </div>
   );

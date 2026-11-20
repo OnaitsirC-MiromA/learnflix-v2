@@ -1,4 +1,7 @@
+export type SourceKind = 'local' | 'telegram';
+
 export interface CourseSummary {
+  sourceKind?: SourceKind;
   id: string; title: string; structure: 'modules' | 'flat';
   totalLessons: number; completedLessons: number; inProgressLessons: number;
   posterLessonId: string | null; lastActivityAt: string | null;
@@ -9,8 +12,10 @@ export interface LessonDTO {
   orderIndex: number; durationSec: number | null; container: string;
   playable: boolean; missing: boolean;
   position: number; furthest: number; completed: boolean;
+  progressUpdatedAt?: string | null;
 }
 export interface LessonFull extends LessonDTO {
+  sourceKind?: SourceKind;
   courseId: string; courseTitle: string;
   prevLessonId: string | null; nextLessonId: string | null;
 }
@@ -18,11 +23,19 @@ export interface ModuleDTO { name: string | null; lessons: LessonDTO[]; }
 export type MaterialKind = 'pdf' | 'zip' | 'archive' | 'doc' | 'image' | 'other';
 export interface MaterialDTO { id: string; module: string | null; relPath: string; name: string; kind: MaterialKind; sizeBytes: number; }
 export interface CourseDetail {
+  sourceKind?: SourceKind;
   id: string; title: string; structure: 'modules' | 'flat'; rootPath: string;
   totalLessons: number; completedLessons: number; materialsCount: number;
   modules: ModuleDTO[];
   materials: MaterialDTO[];
   collectionId: string | null;
+}
+export interface TelegramFile {
+  messageId: number; name: string; size: number; mime: string;
+  video: boolean; duration: number | null; displayTitle?: string;
+}
+export interface TelegramCatalog {
+  chatId: string; topicId: number | null; title: string; files: TelegramFile[];
 }
 export const materialUrl = (id: string, download = false) => `/api/materials/${id}${download ? '?download=1' : ''}`;
 export interface DirEntry { name: string; path: string; }
@@ -80,6 +93,10 @@ async function migrationFetch(url: string, init?: RequestInit): Promise<RepointS
 }
 
 export const api = {
+  telegramStatus: () => jsonFetch<{ connected: boolean }>('/api/telegram/status'),
+  previewTelegram: (link: string) => jsonFetch<TelegramCatalog>('/api/telegram/preview', { method: 'POST', body: JSON.stringify({ link }) }),
+  addTelegramCourse: (link: string) => jsonFetch<{ id: string }>('/api/telegram/courses', { method: 'POST', body: JSON.stringify({ link }) }),
+  refreshTelegramCourse: (id: string) => jsonFetch<{ id: string }>(`/api/telegram/courses/${id}/refresh`, { method: 'POST' }),
   listCourses: (archived?: boolean) => jsonFetch<CourseSummary[]>(`/api/courses${archived ? '?archived=1' : ''}`),
   getCourse: (id: string) => jsonFetch<CourseDetail>(`/api/courses/${id}`),
   createCourse: (path: string) => jsonFetch<{ id: string; existing?: boolean }>('/api/courses', { method: 'POST', body: JSON.stringify({ path }) }),

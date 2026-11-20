@@ -1,0 +1,21 @@
+{
+  "feature": "Títulos visuais das aulas a partir das legendas do Telegram",
+  "source": "https://t.me/FoxIdiomas/40055",
+  "courseId": "4588a7de-ab1f-4a0b-825b-7976a5a01b18",
+  "lessons_updated": 119,
+  "sequence_verified": "F01 a F119",
+  "sample": [
+    "F01 · 01.1 — The Family",
+    "F88 · 30.1 — At the Hotel"
+  ],
+  "original_names_and_ids_preserved": true,
+  "progress_rows_unchanged_after_refresh": true,
+  "server_tests_passed": 204,
+  "web_tests_passed": 13,
+  "python_tests_passed": 16,
+  "tests_skipped": 6,
+  "build": "passou",
+  "installed": "http://192.168.10.102:7778",
+  "ui_verification": "build validado; títulos reais conferidos pela API; disposição visual final não conferida em navegador autenticado",
+  "github": "sem push"
+}

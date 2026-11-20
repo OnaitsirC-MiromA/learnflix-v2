@@ -85,7 +85,7 @@ function CourseCard({
             </div>
           )}
           <div className="mt-1.5 text-xs text-neutral-300">
-            {pct === 100 ? <span className="text-green-400">✓ Concluído</span> : `${c.completedLessons}/${c.totalLessons} aulas · ${pct}%`}
+            {pct === 100 ? <span className="text-green-400">✓ Concluído</span> : `${c.completedLessons}/${c.totalLessons} aulas · ${pct}%${c.sourceKind === 'telegram' ? ' · Telegram' : ''}`}
           </div>
           {archived && onUnarchive && !selectable && (
             <button
@@ -155,7 +155,7 @@ function CourseRow({
         {eyebrow && <div className="text-xs uppercase tracking-wide text-blue-400">Continuar</div>}
         <div className="break-words font-medium text-neutral-50">{c.title}</div>
         <div className="mt-1 text-xs text-neutral-400">
-          {pct === 100 ? <span className="text-green-400">✓ Concluído</span> : `${c.completedLessons}/${c.totalLessons} aulas · ${pct}%`}
+          {pct === 100 ? <span className="text-green-400">✓ Concluído</span> : `${c.completedLessons}/${c.totalLessons} aulas · ${pct}%${c.sourceKind === 'telegram' ? ' · Telegram' : ''}`}
         </div>
         {pct > 0 && pct < 100 && (
           <div className="mt-1.5 h-1 max-w-xs rounded-full bg-white/10">
@@ -587,7 +587,7 @@ export default function Library() {
     }
   };
 
-  // Menu "Adicionar ▾": as três formas de criar — curso único, lote, coleção.
+  // Menu de origens e organização da biblioteca.
   const addMenuButton = (
     <div className="relative">
       <button
@@ -609,6 +609,10 @@ export default function Library() {
               Pasta de cursos
               <div className="text-xs text-neutral-500">Cada subpasta com vídeos vira um curso</div>
             </button>
+            <Link to="/telegram" className="block w-full px-3 py-2.5 text-sm hover:bg-neutral-800" onClick={() => setAddMenu(false)}>
+              Adicionar do Telegram
+              <div className="text-xs text-neutral-400">Assista sem baixar o curso inteiro</div>
+            </Link>
             <button type="button" className="block w-full px-3 py-2.5 text-left text-sm hover:bg-neutral-800" onClick={() => { setAddMenu(false); setNewColName(''); setCreatingCol(true); }}>
               Nova coleção
               <div className="text-xs text-neutral-500">Agrupe cursos na estante</div>
@@ -840,6 +844,9 @@ export default function Library() {
                 >
                   Importar pasta de cursos
                 </button>
+                <Link to="/telegram" className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-neutral-800 px-4 text-sm text-neutral-200 hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
+                  Adicionar do Telegram
+                </Link>
                 <HelpLink topico="primeiros-passos" className="mt-1 text-sm text-neutral-500 hover:text-neutral-300">
                   Como isso funciona?
                 </HelpLink>

@@ -1,3 +1,4 @@
+import { saveCatalog } from '../telegram/catalog';
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -93,7 +94,7 @@ export function planImport(db: Db, data: LibraryExport): ImportPlan {
     // reconhecido pela impressão digital já tem pasta boa aqui — o caminho que
     // veio no arquivo é de outra máquina e não interessa mais. Avisar nesse caso
     // assustaria à toa, e sobre um curso que está inteiro.
-    if (!funde && !pastaExiste(c.rootPath)) {
+    if (!funde && !c.telegram && !pastaExiste(c.rootPath)) {
       plano.missingFolder++;
       plano.missingFolderTitles.push(c.title);
     }
@@ -151,8 +152,9 @@ export function applyImport(db: Db, data: LibraryExport): void {
   );
 
   const inserirAula = (courseId: string, l: ExportedLesson, orderIndex: number): void => {
+    const lessonId = randomUUID();
     insertLesson.run({
-      id: randomUUID(),
+      id: lessonId,
       course_id: courseId,
       rel_path: l.relPath,
       module: l.module,
@@ -162,6 +164,7 @@ export function applyImport(db: Db, data: LibraryExport): void {
       duration_sec: l.durationSec,
       ...doNomeDoArquivo(l),
     });
+    if (l.telegramMessageId) db.prepare('UPDATE lessons SET telegram_message_id=? WHERE id=?').run(l.telegramMessageId, lessonId);
   };
 
   // Sem a pasta por perto não dá para confirmar que os vídeos existem: as aulas
@@ -217,11 +220,13 @@ export function applyImport(db: Db, data: LibraryExport): void {
       // vezes o mesmo arquivo tem de dar no mesmo que importar uma.
       const candidato = matchCourse(db, c);
       const jaExiste = candidato && !reivindicados.has(candidato) ? candidato : null;
-      const courseId = jaExiste ?? (pastaExiste(c.rootPath) ? criarComScan(c) : criarSemPasta(c));
+      const courseId = jaExiste ?? (c.telegram ? saveCatalog(db, c.telegram) : (pastaExiste(c.rootPath) ? criarComScan(c) : criarSemPasta(c)));
       reivindicados.add(courseId);
 
       for (const l of c.lessons) {
-        let aula = idDaAula.get(courseId, l.relPath) as { id: string } | undefined;
+        let aula = (c.telegram && l.telegramMessageId
+          ? db.prepare('SELECT id FROM lessons WHERE course_id=? AND telegram_message_id=?').get(courseId, l.telegramMessageId)
+          : idDaAula.get(courseId, l.relPath)) as { id: string } | undefined;
         if (!aula) {
           // Aula que o arquivo conhece e esta máquina não: o vídeo pode ter sido
           // apagado daqui ou estar num disco desconectado. Descartá-la jogaria

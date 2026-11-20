@@ -3,8 +3,9 @@
 Assista aos cursos em vídeo que já estão nas suas pastas, com o progresso guardado direito.
 
 Você aponta uma pasta, ela vira um curso: o Learnflix encontra as aulas, respeita a ordem e os
-módulos, gera as capas e lembra exatamente onde você parou em cada aula. Tudo roda na sua máquina —
-nada é enviado para lugar nenhum, nenhuma conta, nenhum login.
+módulos, gera as capas e lembra exatamente onde você parou em cada aula. Para cursos locais, tudo
+roda na sua máquina, sem conta ou login. A integração opcional com o Telegram permite manter os
+vídeos na origem e assistir por partes, usando uma conta que já tenha acesso ao curso.
 
 **Instalar é uma linha no terminal** — igual no macOS, no Windows e no Linux. Não precisa clonar
 este repositório, nem descompactar nada, nem compilar: é colar o comando e o app abre.
@@ -265,6 +266,101 @@ Você também pode acrescentar pastas-raiz pela tela de **Configurações**, sem
 nenhuma.
 
 ---
+
+## Instalar esta versão em outra máquina
+
+O pacote com Telegram pode ser instalado de duas formas, ambas já com Node,
+Python, **FFmpeg e FFprobe incluídos**:
+
+- **Com Docker:** use o `compose.local.yaml`, com volume próprio e autenticação
+  pessoal. Passo a passo em [INSTALAR.md](INSTALAR.md).
+- **Sem Docker:** instaladores nativos para Windows, macOS e Linux, descritos em
+  [INSTALAR-NATIVO.md](INSTALAR-NATIVO.md). Eles preparam Node, Python, FFmpeg e
+  FFprobe numa pasta do usuário, sem mexer no PATH global.
+
+A versão com essas integrações ainda não foi publicada no npm/GitHub Releases.
+
+## Cursos do Telegram (opcional)
+
+### Como ativar
+
+1. **Crie as credenciais da sua aplicação** em
+   [my.telegram.org/apps](https://my.telegram.org/apps): entre com sua conta,
+   clique em **API development tools**, preencha os campos pedidos e crie o app.
+   Anote o **api_id** e o **api_hash** exibidos.
+2. **Instale o Learnflix com Telegram.** Com Docker, siga
+   [INSTALAR.md](INSTALAR.md); sem Docker, [INSTALAR-NATIVO.md](INSTALAR-NATIVO.md).
+   Na configuração, informe o api_id, o api_hash, uma senha para abrir o Learnflix
+   (opcional no modo nativo local), o telefone da conta Telegram, o código recebido
+   e a senha de duas etapas, se houver. Esses valores são digitados de forma oculta.
+3. **Adicione o curso:** abra o Learnflix, vá em **Adicionar → Do Telegram**, cole o
+   link do canal, grupo ou tópico acessível à conta e confira a prévia antes de adicionar.
+4. **Assista:** o vídeo é transmitido por partes, sem baixar o curso inteiro, e o ponto
+   em que você parou fica salvo para continuar depois.
+
+A conta usada precisa ter acesso à origem. A sessão fica salva nesta instalação;
+não é preciso repetir o login a cada abertura.
+
+Em **Adicionar → Do Telegram**, cole o link de um canal ou tópico acessível à sua
+conta, confira a lista de vídeos e materiais e adicione à biblioteca. Os vídeos
+são transmitidos por partes conforme o player pede, inclusive ao avançar ou
+retomar. Não é necessário baixar o curso inteiro. Anexos são baixados
+individualmente quando você os abre.
+
+O progresso continua no banco local do Learnflix: posição atual, trecho mais
+avançado e conclusão de cada aula. A identidade é a mensagem de origem, então
+**Atualizar lista do Telegram** preserva o progresso mesmo que o nome da aula
+mude. Quando a mensagem tem uma legenda descritiva, ela fornece o título visual
+(por exemplo, `#F88 30.1. At the Hotel.mp4` vira **F88 · 30.1 — At the Hotel**).
+O nome original continua guardado e pode ser consultado ao passar o mouse sobre
+a aula; o arquivo de origem não é renomeado. Se a legenda não informar um título,
+o nome do arquivo continua sendo usado. Para aplicar isso a um curso já adicionado,
+use **Atualizar lista do Telegram** no menu do curso.
+
+A exportação da biblioteca inclui o catálogo e o progresso, sem sessão,
+API hash ou token. Conteúdos removidos da origem aparecem como indisponíveis.
+
+A reprodução precisa de internet, acesso contínuo da conta à origem e vídeo num
+formato compatível com o navegador. O navegador mantém um buffer temporário;
+a ponte não grava vídeos no disco nem converte codecs. O progresso é salvo
+periodicamente, ao pausar, buscar um trecho e sair. Se o servidor ficar
+indisponível, uma cópia pendente no navegador permite recuperar a posição na
+próxima abertura; não apague os dados do site antes de sincronizar.
+
+Essa origem usa uma **ponte Telegram opcional**, com sessão própria e Python
+3.11+. Quem usa apenas pastas locais continua precisando só do Node. Consulte
+[instalação e autenticação da ponte](integrations/telegram/README.md).
+
+Para executar o Learnflix conectado à ponte já autenticada, configure
+`TELEGRAM_BRIDGE_URL` (por exemplo `http://127.0.0.1:8099`) e
+`TELEGRAM_BRIDGE_TOKEN` no ambiente privado do servidor. Para ler o segredo
+diretamente de um arquivo privado, use `TELEGRAM_BRIDGE_TOKEN_FILE`. O mesmo token é usado na
+ponte. A página **Do Telegram** mostra se a conexão está pronta; credenciais não
+são digitadas nessa página.
+
+### Instância de teste no ZimaOS
+
+`Dockerfile.telegram` e `compose.telegram.yaml` executam o Learnflix e a ponte
+na mesma rede privada do contêiner. A ponte não publica porta. O exemplo expõe
+o Learnflix em `192.168.10.102:7778`, deixando a instalação existente em 7777.
+O banco em `../data` e a sessão em `../private/session` pertencem a essa instância.
+
+Os segredos ficam fora do código, nos arquivos privados `../private/api_id`, `../private/api_hash`,
+`../private/bridge.key` e `../private/access_password` (permissão 600). A sessão
+precisa estar autenticada antes da inicialização; nenhum login interativo é
+iniciado pelo contêiner. Revise endereço, UID/GID e caminhos de volumes antes de
+usar o exemplo em outra instalação.
+
+Quando `ACCESS_PASSWORD` ou `ACCESS_PASSWORD_FILE` está definido, o navegador
+pede autenticação HTTP com usuário **learnflix** e a senha configurada. Sem essas
+variáveis, o uso local mantém o comportamento sem login. O exemplo no NAS usa
+`ACCESS_PASSWORD_FILE`; o arquivo não entra no backup nem no repositório.
+
+Com o build já gerado e os arquivos privados preparados:
+
+```bash
+docker compose -f compose.telegram.yaml up -d --build
+```
 
 ## Desenvolvimento
 
