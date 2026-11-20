@@ -4,6 +4,9 @@ import type { FastifyInstance } from 'fastify';
 import type { Db } from '../db';
 import type { AppConfig } from '../config';
 
+import { proxyTelegram } from '../telegram/bridge';
+import { sourceAddress } from '../telegram/catalog';
+
 const CONTENT_TYPES: Record<string, string> = {
   mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
   mkv: 'video/x-matroska', avi: 'video/x-msvideo', flv: 'video/x-flv',
@@ -33,13 +36,19 @@ export function parseRange(header: string | undefined, size: number): { start: n
 export async function streamRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
 
-  app.get('/api/lessons/:id/stream', (req, reply) => {
+  app.get('/api/lessons/:id/stream', async (req, reply) => {
     const id = (req.params as { id: string }).id;
     const row = db.prepare(`
-      SELECT l.rel_path, l.container, c.root_path
+      SELECT l.rel_path, l.container, l.telegram_message_id, l.missing, c.root_path, c.source_kind
       FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.id = ?
     `).get(id) as any;
     if (!row) return reply.code(404).send({ error: 'not_found' });
+
+    if (row.source_kind === 'telegram') {
+      const source = sourceAddress(row.root_path);
+      if (!source || !row.telegram_message_id || row.missing) return reply.code(404).send({ error: 'A aula não está mais disponível no Telegram.' });
+      return proxyTelegram(config, req, reply, source.chatId, row.telegram_message_id);
+    }
 
     // Se existe uma versão convertida (remux TS→MP4 etc.), ela tem prioridade —
     // o acervo original nunca é tocado; o convertido vive em DATA_DIR/converted.

@@ -29,7 +29,7 @@ export default function LessonGrid({
               {!l.missing && !l.playable && <span className="absolute left-1 top-1 rounded bg-neutral-950/80 px-1 text-[10px] text-neutral-300">converter</span>}
             </div>
             <div className="p-2">
-              <div className="text-sm truncate">{l.title}</div>
+              <div className="min-h-10 break-words text-sm leading-5 line-clamp-2" title={`${l.title}\nOriginal: ${l.relPath.split('/').pop()}`}>{l.title}</div>
               <div className="text-xs text-neutral-500 flex justify-between">
                 <span>{formatDuration(l.durationSec)}</span>
                 <span>{l.completed ? '✓' : l.position > 0 ? '▓' : '○'}</span>

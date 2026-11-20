@@ -37,3 +37,12 @@ server/src/bundled.ts
 
 # Executável gerado por scripts/build-binario.mjs
 build/
+
+# Artefatos da ponte e dos scripts de implantação Python.
+__pycache__/
+*.pyc
+
+# Cursos pessoais opcionais do pacote Docker local.
+courses/*
+!courses/.gitkeep
+runtime/

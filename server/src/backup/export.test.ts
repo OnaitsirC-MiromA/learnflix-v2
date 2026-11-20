@@ -36,7 +36,7 @@ describe('buildExport', () => {
     const out = buildExport(db);
 
     expect(out.format).toBe('learnflix-library');
-    expect(out.version).toBe(1);
+    expect(out.version).toBe(2);
     expect(out.exportedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
 
     db.close();

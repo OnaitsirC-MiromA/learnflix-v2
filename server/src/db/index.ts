@@ -96,6 +96,18 @@ export function migrate(db: Db): void {
     db.exec(SCHEMA_V1);
     pragma(db, 'user_version = 1');
   }
+  if (version < 2) {
+    transaction(db, () => {
+      db.exec(`
+        ALTER TABLE courses ADD COLUMN source_kind TEXT NOT NULL DEFAULT 'local';
+        ALTER TABLE lessons ADD COLUMN telegram_message_id INTEGER;
+        ALTER TABLE materials ADD COLUMN telegram_message_id INTEGER;
+        CREATE UNIQUE INDEX idx_telegram_lessons ON lessons(course_id, telegram_message_id);
+        CREATE UNIQUE INDEX idx_telegram_materials ON materials(course_id, telegram_message_id);
+      `);
+      pragma(db, 'user_version = 2');
+    });
+  }
 }
 
 export function openDb(dbPath: string): Db {

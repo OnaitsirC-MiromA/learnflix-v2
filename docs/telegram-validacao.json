@@ -1,0 +1,44 @@
+{
+  "status": "instância de teste instalada e saudável no ZimaOS",
+  "url": "http://192.168.10.102:7778",
+  "account_username": "learnflix",
+  "password": "mesma da instalação Cursos Locais; não incluída neste pacote",
+  "existing_installation": "porta 7777 preservada",
+  "node_tests_passed": 203,
+  "web_tests_passed": 13,
+  "python_tests_passed": 14,
+  "tests_skipped": 6,
+  "build": "passou",
+  "browser_mock": "prévia, importação, busca, retomada, retry e atualização validados com vídeo de teste",
+  "telegram_real": {
+    "title": "Inglês sem Neura - Jorge Henrique",
+    "videos": 239,
+    "materials": 4,
+    "range_requests": [
+      {
+        "range": "bytes=0-31",
+        "http": 206,
+        "bytes": 32
+      },
+      {
+        "range": "bytes=12345-77880",
+        "http": 206,
+        "bytes": 65536
+      },
+      {
+        "range": "bytes=-4096",
+        "http": 206,
+        "bytes": 4096
+      }
+    ],
+    "progress_api_and_sqlite_seconds": 12.5,
+    "test_progress_removed": true,
+    "media_saved_to_disk": false
+  },
+  "not_checked": [
+    "reprodução no navegador de todos os vídeos reais",
+    "codecs de todo o acervo",
+    "latência de conexões fora da rede local"
+  ],
+  "github": "nenhum push ou PR; alterações locais na branch feat/telegram-streaming"
+}

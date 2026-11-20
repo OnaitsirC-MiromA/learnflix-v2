@@ -1,3 +1,4 @@
+import { sourceAddress, type TelegramCatalog, type TelegramFile } from '../telegram/catalog';
 import type { Db } from '../db';
 import { getAllowedRootsExtra } from '../routes/settings';
 import {
@@ -23,14 +24,14 @@ export function buildExport(db: Db, appVersion = 'dev'): LibraryExport {
 
   const courses = db
     .prepare(
-      `SELECT c.id, c.title, c.root_path, c.structure, c.archived, c.sort_index, c.collection_id,
+      `SELECT c.id, c.title, c.root_path, c.source_kind, c.structure, c.archived, c.sort_index, c.collection_id,
               (SELECT rel_path FROM lessons WHERE id = c.poster_lesson_id) AS poster_rel_path
        FROM courses c ORDER BY c.rowid`,
     )
     .all() as any[];
 
   const lessonsDoCurso = db.prepare(`
-    SELECT l.rel_path, l.module, l.title, l.order_index, l.module_order, l.duration_sec,
+    SELECT l.rel_path, l.telegram_message_id, l.module, l.title, l.order_index, l.module_order, l.duration_sec,
            p.position_sec, p.furthest_sec, p.duration_sec AS p_duration_sec,
            p.completed, p.completed_at, p.auto_completed, p.updated_at
     FROM lessons l
@@ -43,6 +44,19 @@ export function buildExport(db: Db, appVersion = 'dev'): LibraryExport {
     db.prepare('SELECT path, created_at, last_checked_at FROM course_roots ORDER BY rowid').all() as any[]
   ).map((r): ExportedCourseRoot => ({ path: r.path, createdAt: r.created_at, lastCheckedAt: r.last_checked_at }));
 
+  const telegramCatalog = (c: any): TelegramCatalog | undefined => {
+    const source = sourceAddress(c.root_path);
+    if (c.source_kind !== 'telegram' || !source) return undefined;
+    const files: TelegramFile[] = (db.prepare('SELECT * FROM lessons WHERE course_id=? AND telegram_message_id IS NOT NULL AND missing=0').all(c.id) as any[]).map(l => ({
+      messageId: l.telegram_message_id, name: l.rel_path.split('/').pop(), displayTitle: l.title, size: l.size_bytes, mime: `video/${l.container}`,
+      video: true, duration: l.duration_sec,
+    }));
+    for (const m of db.prepare('SELECT * FROM materials WHERE course_id=? AND telegram_message_id IS NOT NULL').all(c.id) as any[]) {
+      files.push({ messageId: m.telegram_message_id, name: m.rel_path.split('/').pop(), size: m.size_bytes,
+        mime: 'application/octet-stream', video: false, duration: null });
+    }
+    return { ...source, title: c.title, files };
+  };
   return {
     format: FORMAT,
     version: VERSION,
@@ -50,6 +64,7 @@ export function buildExport(db: Db, appVersion = 'dev'): LibraryExport {
     app: { version: appVersion, platform: process.platform },
     collections,
     courses: courses.map((c) => ({
+      ...(c.source_kind === 'telegram' ? { telegram: telegramCatalog(c) } : {}),
       title: c.title,
       rootPath: c.root_path,
       structure: c.structure,
@@ -59,6 +74,7 @@ export function buildExport(db: Db, appVersion = 'dev'): LibraryExport {
       posterLessonRelPath: c.poster_rel_path ?? null,
       lessons: (lessonsDoCurso.all(c.id) as any[]).map(
         (l): ExportedLesson => ({
+          ...(l.telegram_message_id ? { telegramMessageId: l.telegram_message_id } : {}),
           relPath: l.rel_path,
           module: l.module,
           title: l.title,

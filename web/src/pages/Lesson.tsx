@@ -1,3 +1,4 @@
+import { progressStorage, readPending, rememberProgress, acknowledgeProgress, resumeSnapshot, queueProgress, type ProgressSnapshot } from '../lib/progress';
 import { useEffect, useRef, useState, useCallback, type ReactNode, type PointerEvent as ReactPointerEvent } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -41,7 +42,12 @@ function IconButton({
   );
 }
 
+// Remontar ao trocar a aula impede refs/timers do vídeo anterior de vazarem.
 export default function Lesson() {
+  const { id = '' } = useParams();
+  return <LessonPlayer key={id} />;
+}
+function LessonPlayer() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -52,6 +58,9 @@ export default function Lesson() {
   const ajudaAberta = searchParams.has('ajuda');
   const videoRef = useRef<HTMLVideoElement>(null);
   const furthestRef = useRef(0);
+  const readyRef = useRef(false);
+  const snapshotRef = useRef<ProgressSnapshot | null>(null);
+  const [streamError, setStreamError] = useState(false);
   const lastSaveRef = useRef(0);
   const mountedRef = useRef(true);
   const noticeTimer = useRef(0);
@@ -85,7 +94,7 @@ export default function Lesson() {
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [notice, setNotice] = useState<Notice | null>(null);
 
-  const { data: lesson } = useQuery({ queryKey: ['lesson', id], queryFn: () => api.getLesson(id) });
+  const { data: lesson, isFetching } = useQuery({ queryKey: ['lesson', id], queryFn: () => api.getLesson(id), refetchOnMount: 'always', refetchOnWindowFocus: false });
 
   // Media Session: título/capa e controles na notificação de mídia e na tela de
   // bloqueio (Android/iOS). No Android isto também habilita continuar o ÁUDIO em
@@ -135,23 +144,28 @@ export default function Lesson() {
   const save = useCallback(
     (opts?: { keepalive?: boolean; silent?: boolean }) => {
       const v = videoRef.current;
-      if (!v) return;
-      const body = {
+      if (!readyRef.current) return;
+      const body: ProgressSnapshot | null = v ? {
         position_sec: v.currentTime,
-        furthest_sec: furthestRef.current,
-        duration_sec: Number.isFinite(v.duration) ? v.duration : null,
-      };
-      if (opts?.keepalive) {
-        fetch(`/api/lessons/${id}/progress`, {
-          method: 'PATCH',
-          keepalive: true,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        }).catch(() => {});
-        return;
-      }
-      api
-        .saveProgress(id, body)
+        furthest_sec: Math.max(furthestRef.current, v.currentTime),
+        duration_sec: Number.isFinite(v.duration) && v.duration > 0 ? v.duration : null,
+        savedAt: new Date().toISOString(),
+      } : snapshotRef.current;
+      if (!body) return;
+      snapshotRef.current = body;
+      rememberProgress(progressStorage(), id, body);
+      queueProgress(id, async () => {
+        const res = await fetch(`/api/lessons/${id}/progress`, {
+          method: 'PATCH', keepalive: !!opts?.keepalive, signal: AbortSignal.timeout(15000),
+          headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error('Falha ao salvar progresso');
+        acknowledgeProgress(progressStorage(), id, body);
+        qc.setQueryData(['lesson', id], (old: typeof lesson) => old ? { ...old,
+          position: body.position_sec, furthest: body.furthest_sec,
+          progressUpdatedAt: body.savedAt,
+        } : old);
+      })
         .then(() => {
           if (!mountedRef.current) return;
           // Autosave silencioso só limpa um erro anterior; não pisca "Salvo".
@@ -170,7 +184,7 @@ export default function Lesson() {
           if (mountedRef.current) setSaveState('error');
         });
     },
-    [id],
+    [id, qc],
   );
 
   const goTo = useCallback(
@@ -209,13 +223,25 @@ export default function Lesson() {
 
   const onLoaded = () => {
     const v = videoRef.current;
-    if (v && lesson && !lesson.completed && lesson.position > 0) v.currentTime = lesson.position;
+    if (!v || !lesson || readyRef.current) return;
+    const pending = snapshotRef.current ?? resumeSnapshot(readPending(progressStorage(), id), lesson.progressUpdatedAt);
+    const position = pending?.position_sec ?? (!lesson.completed ? lesson.position : 0);
+    furthestRef.current = Math.max(lesson.furthest, pending?.furthest_sec ?? 0);
+    if (position > 0) v.currentTime = Number.isFinite(v.duration) ? Math.min(position, Math.max(0, v.duration - 0.1)) : position;
+    readyRef.current = true;
+    setStreamError(false);
   };
 
   const onTimeUpdate = () => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || !readyRef.current) return;
     furthestRef.current = Math.max(furthestRef.current, v.currentTime);
+    snapshotRef.current = {
+      position_sec: v.currentTime, furthest_sec: furthestRef.current,
+      duration_sec: Number.isFinite(v.duration) && v.duration > 0 ? v.duration : null,
+      savedAt: new Date().toISOString(),
+    };
+    rememberProgress(progressStorage(), id, snapshotRef.current);
     const now = Date.now();
     if (now - lastSaveRef.current > 5000) {
       lastSaveRef.current = now;
@@ -393,8 +419,9 @@ export default function Lesson() {
   // O <video> falhou em algo que o flag dizia tocável — descobre o motivo real
   // e troca a tela preta por um estado acionável.
   const onVideoError = useCallback(() => {
-    if (!verdict) void verifyPlayback();
-  }, [verdict, verifyPlayback]);
+    if (lesson?.sourceKind === 'telegram') setStreamError(true);
+    else if (!verdict) void verifyPlayback();
+  }, [lesson?.sourceKind, verdict, verifyPlayback]);
 
   // Flag já dizia não-tocável (selo do curso): busca o veredito com o motivo
   // e se é remuxável, para oferecer o botão certo.
@@ -480,7 +507,7 @@ export default function Lesson() {
     if (lesson.nextLessonId) navigate(`/lesson/${lesson.nextLessonId}`);
   };
 
-  if (!lesson) {
+  if (!lesson || (!readyRef.current && isFetching)) {
     // Esqueleto: pré-pinta o palco preto + barra de título, para a chegada do
     // player não causar layout-shift. Sem spinner (guia de produto).
     return (
@@ -576,9 +603,20 @@ export default function Lesson() {
         onLoadedMetadata={onLoaded}
         onTimeUpdate={onTimeUpdate}
         onPause={() => save()}
-        onEnded={onEnded}
+        onSeeked={() => save()}
+        onEnded={() => { save(); onEnded(); }}
         onError={onVideoError}
       />
+
+      {streamError && (
+        <div role="alert" className="absolute inset-x-4 top-28 z-30 mx-auto max-w-lg rounded-xl border border-neutral-700 bg-neutral-900 p-4 text-sm">
+          <p>Não foi possível reproduzir esta aula do Telegram. Confira a conexão e o acesso à origem. O formato do vídeo também precisa ser compatível com o navegador.</p>
+          <p className="mt-2 text-neutral-400">A posição salva será mantida.</p>
+          <button className="mt-3 min-h-11 rounded-lg bg-blue-600 px-4" onClick={() => {
+            save(); readyRef.current = false; setStreamError(false); videoRef.current?.load();
+          }}>Tentar novamente</button>
+        </div>
+      )}
 
       {coarsePointer && (
         // Só INDICADORES (pointer-events-none): nada pode cobrir o <video>,
@@ -666,7 +704,7 @@ export default function Lesson() {
             {/* Ferramentas */}
             <div className="flex items-center gap-1">
               {/* Definir capa — ação ocasional, ocultada no celular para caber a barra */}
-              <div className="hidden sm:block">
+              <div className={lesson.sourceKind === 'telegram' ? 'hidden' : 'hidden sm:block'}>
                 <IconButton label="Usar este frame como capa do curso" onClick={() => setConfirmCover(true)}>
                   <Camera />
                 </IconButton>

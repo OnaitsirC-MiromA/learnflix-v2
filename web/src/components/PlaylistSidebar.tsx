@@ -50,7 +50,7 @@ export default function PlaylistSidebar({
                     loading="lazy"
                     onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = 'hidden')}
                   />
-                  <span className="flex-1 truncate">{l.title}</span>
+                  <span className="min-w-0 flex-1 break-words line-clamp-2" title={`${l.title}\nOriginal: ${l.relPath.split('/').pop()}`}>{l.title}</span>
                 </button>
               );
             })}

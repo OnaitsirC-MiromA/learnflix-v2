@@ -1,0 +1,37 @@
+services:
+  learnflix:
+    build:
+      context: .
+      dockerfile: Dockerfile.telegram
+    image: learnflix-telegram:test
+    restart: unless-stopped
+    ports:
+      - "192.168.10.102:7778:7777"
+    environment:
+      TZ: America/Sao_Paulo
+      PORT: "7777"
+      BIND: 0.0.0.0
+      OPEN_BROWSER: "0"
+      DATA_DIR: /data
+      ALLOWED_ROOTS: /library
+      TELEGRAM_API_ID_FILE: /run/secrets/api_id
+      TELEGRAM_API_HASH_FILE: /run/secrets/api_hash
+      TELEGRAM_SESSION: /session/account
+      TELEGRAM_BRIDGE_URL: http://127.0.0.1:8099
+      TELEGRAM_BRIDGE_TOKEN_FILE: /run/secrets/bridge_token
+      ACCESS_PASSWORD_FILE: /run/secrets/access_password
+    volumes:
+      - ../data:/data
+      - ../private/session:/session
+      - ../private/api_id:/run/secrets/api_id:ro
+      - ../private/api_hash:/run/secrets/api_hash:ro
+      - ../private/bridge.key:/run/secrets/bridge_token:ro
+      - ../private/access_password:/run/secrets/access_password:ro
+      - /DATA/.media/HDD-Storage/Cursos-Telegram:/library:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

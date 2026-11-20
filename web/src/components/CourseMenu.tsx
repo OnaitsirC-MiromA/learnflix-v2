@@ -106,6 +106,21 @@ export default function CourseMenu({
     }
   };
 
+  const doRefreshTelegram = async () => {
+    if (busy) return;
+    setBusy(true);
+    close();
+    try {
+      await api.refreshTelegramCourse(course.id);
+      invalidate();
+      onNotice('Lista do Telegram atualizada. Seu progresso foi preservado.');
+    } catch (err) {
+      onNotice(err instanceof Error ? err.message : 'Não foi possível atualizar a lista. Tente novamente.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const doResetProgress = async () => {
     close();
     try {
@@ -169,9 +184,15 @@ export default function CourseMenu({
         <>
           <div className="fixed inset-0 z-10" onClick={close} />
           <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900 py-1">
-            <button className={item} onClick={() => { close(); onEditCover(); }}>Editar capa</button>
-            <button className={item} onClick={() => setFlow('pickRepoint')}>Re-apontar pasta…</button>
-            <button className={item} onClick={doRescan}>Re-escanear agora</button>
+            {course.sourceKind === 'telegram' ? (
+              <button className={item} disabled={busy} onClick={() => void doRefreshTelegram()}>Atualizar lista do Telegram</button>
+            ) : (
+              <>
+                <button className={item} onClick={() => { close(); onEditCover(); }}>Editar capa</button>
+                <button className={item} onClick={() => setFlow('pickRepoint')}>Re-apontar pasta…</button>
+                <button className={item} onClick={doRescan}>Re-escanear agora</button>
+              </>
+            )}
             <button className={item} onClick={() => { setTitle(course.title); setFlow('rename'); }}>Renomear…</button>
             <button className={item} onClick={() => { setNewColName(''); setFlow('collection'); }}>Coleção…</button>
             <button className={item} onClick={() => setFlow('confirmReset')}>Zerar progresso…</button>
@@ -286,7 +307,9 @@ export default function CourseMenu({
       {flow === 'confirmDelete' && (
         <ConfirmDialog
           title={`Excluir "${course.title}"?`}
-          message="Remove o curso e todo o progresso definitivamente. Os arquivos de vídeo no disco não são tocados."
+          message={course.sourceKind === 'telegram'
+            ? 'Remove o curso e todo o progresso definitivamente deste Learnflix. As mensagens e os arquivos no Telegram não são alterados.'
+            : 'Remove o curso e todo o progresso definitivamente. Os arquivos de vídeo no disco não são tocados.'}
           confirmLabel="Excluir"
           danger
           onConfirm={doDelete}

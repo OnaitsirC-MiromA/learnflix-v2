@@ -7,6 +7,9 @@ import { allowedRootsFor } from './settings';
 import { isWithinRoots } from './fs';
 import { parseRange } from './stream';
 
+import { proxyTelegram } from '../telegram/bridge';
+import { sourceAddress } from '../telegram/catalog';
+
 // Content-types dos materiais adicionais. PDF/imagem servem INLINE (para o leitor
 // embutido e o <img> renderizarem); o resto vai como download.
 const CONTENT_TYPES: Record<string, string> = {
@@ -28,12 +31,17 @@ export async function materialsRoutes(app: FastifyInstance, opts: { db: Db; conf
   // Serve o arquivo de um material. O caminho vem do BANCO (não do usuário), e
   // ainda assim é validado contra as raízes — o app nunca sai do acervo. ?download=1
   // força o "salvar como" (para zip/docs); senão inline (PDF/imagem no leitor).
-  app.get('/api/materials/:id', (req, reply) => {
+  app.get('/api/materials/:id', async (req, reply) => {
     const id = (req.params as { id: string }).id;
-    const row = db.prepare('SELECT m.rel_path, c.root_path FROM materials m JOIN courses c ON c.id=m.course_id WHERE m.id=?').get(id) as
-      | { rel_path: string; root_path: string }
+    const row = db.prepare('SELECT m.rel_path, m.telegram_message_id, c.root_path, c.source_kind FROM materials m JOIN courses c ON c.id=m.course_id WHERE m.id=?').get(id) as
+      | { rel_path: string; root_path: string; telegram_message_id: number | null; source_kind: string }
       | undefined;
     if (!row) return reply.code(404).send({ error: 'not_found' });
+    if (row.source_kind === 'telegram') {
+      const source = sourceAddress(row.root_path);
+      if (!source || !row.telegram_message_id) return reply.code(404).send({ error: 'not_found' });
+      return proxyTelegram(config, req, reply, source.chatId, row.telegram_message_id);
+    }
     const filePath = path.join(row.root_path, row.rel_path.split('/').join(path.sep));
     if (!isWithinRoots(filePath, allowedRootsFor(config, db))) return reply.code(403).send({ error: 'forbidden' });
     let stat: fs.Stats;

@@ -9,6 +9,11 @@ import { previewReconcile, reconcileCourse } from '../scan/reconcile';
 
 export async function migrationRoutes(app: FastifyInstance, opts: { db: Db; config: AppConfig }): Promise<void> {
   const { db, config } = opts;
+  app.addHook('preHandler', async (req, reply) => {
+    const id = (req.params as { id?: string }).id;
+    const course = db.prepare('SELECT source_kind FROM courses WHERE id=?').get(id ?? '') as any;
+    if (course?.source_kind === 'telegram') return reply.code(409).send({ error: 'Atualize a lista pela origem Telegram.' });
+  });
 
   const validatePath = (raw: unknown): { ok: true; path: string } | { ok: false; code: number } => {
     if (!raw || typeof raw !== 'string') return { ok: false, code: 400 };

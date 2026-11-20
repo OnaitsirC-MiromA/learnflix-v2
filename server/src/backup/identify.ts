@@ -25,10 +25,12 @@ export function matchCourse(db: Db, doArquivo: ExportedCourse): string | null {
     | undefined;
   if (mesmoCaminho) return mesmoCaminho.id;
 
+  // Mensagens iguais em canais distintos não são a mesma aula.
+  if (doArquivo.telegram || doArquivo.rootPath.startsWith('telegram://')) return null;
   const digital = new Set(doArquivo.lessons.map((l) => l.relPath));
   if (digital.size === 0) return null;
 
-  const aulasLocais = db.prepare('SELECT course_id, rel_path FROM lessons') .all() as {
+  const aulasLocais = db.prepare("SELECT l.course_id, l.rel_path FROM lessons l JOIN courses c ON c.id=l.course_id WHERE c.source_kind='local'") .all() as {
     course_id: string;
     rel_path: string;
   }[];

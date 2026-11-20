@@ -18,9 +18,9 @@ export async function convertRoutes(app: FastifyInstance, opts: { db: Db; config
 
   const lessonPath = (id: string): { file: string; courseId: string } | null => {
     const row = db
-      .prepare('SELECT l.rel_path, l.course_id, c.root_path FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.id = ?')
+      .prepare('SELECT l.rel_path, l.course_id, c.root_path, c.source_kind FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.id = ?')
       .get(id) as any;
-    if (!row) return null;
+    if (!row || row.source_kind === 'telegram') return null;
     return { file: path.join(row.root_path, row.rel_path.split('/').join(path.sep)), courseId: row.course_id };
   };
 

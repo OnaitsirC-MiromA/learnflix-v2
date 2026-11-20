@@ -7,8 +7,8 @@ export async function lessonsRoutes(app: FastifyInstance, opts: { db: Db }): Pro
   app.get('/api/lessons/:id', async (req, reply) => {
     const id = (req.params as { id: string }).id;
     const r = db.prepare(`
-      SELECT l.*, c.title AS course_title,
-        p.position_sec, p.furthest_sec, p.completed, p.duration_sec AS p_dur
+      SELECT l.*, c.source_kind, c.title AS course_title,
+        p.position_sec, p.furthest_sec, p.completed, p.updated_at AS progress_updated_at, p.duration_sec AS p_dur
       FROM lessons l JOIN courses c ON c.id = l.course_id
       LEFT JOIN progress p ON p.lesson_id = l.id
       WHERE l.id = ?
@@ -19,6 +19,7 @@ export async function lessonsRoutes(app: FastifyInstance, opts: { db: Db }): Pro
     const next = db.prepare('SELECT id FROM lessons WHERE course_id=? AND order_index>? ORDER BY order_index ASC LIMIT 1').get(r.course_id, r.order_index) as any;
 
     return {
+      sourceKind: r.source_kind, progressUpdatedAt: r.progress_updated_at ?? null,
       id: r.id, title: r.title, module: r.module, relPath: r.rel_path,
       orderIndex: r.order_index, durationSec: r.duration_sec ?? r.p_dur ?? null,
       container: r.container, playable: !!r.playable, missing: !!r.missing,
@@ -32,6 +33,10 @@ export async function lessonsRoutes(app: FastifyInstance, opts: { db: Db }): Pro
     const id = (req.params as { id: string }).id;
     const b = req.body as { position_sec: number; furthest_sec: number; duration_sec: number | null };
     if (!db.prepare('SELECT 1 FROM lessons WHERE id=?').get(id)) { reply.code(404); return { error: 'not_found' }; }
+    if (!b || !Number.isFinite(b.position_sec) || b.position_sec < 0 || !Number.isFinite(b.furthest_sec) || b.furthest_sec < 0
+      || (b.duration_sec !== null && (!Number.isFinite(b.duration_sec) || b.duration_sec <= 0))) {
+      return reply.code(400).send({ error: 'invalid_progress' });
+    }
     db.prepare(`
       INSERT INTO progress (lesson_id, position_sec, furthest_sec, duration_sec, updated_at)
       VALUES (@id, @pos, @furthest, @dur, @now)

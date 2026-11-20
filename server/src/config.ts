@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
@@ -17,6 +18,9 @@ export interface AppConfig {
   thumbsDir: string;
   convertedDir: string;
   openBrowser: boolean;
+  telegramBridgeUrl?: string;
+  telegramBridgeToken?: string;
+  accessPassword?: string;
 }
 
 // Raízes navegáveis padrão no seletor de pastas. No macOS, compartilhamentos de
@@ -67,5 +71,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     thumbsDir: path.join(dataDir, 'thumbs'),
     convertedDir: path.join(dataDir, 'converted'),
     openBrowser: env.OPEN_BROWSER === undefined ? true : env.OPEN_BROWSER === '1' || env.OPEN_BROWSER === 'true',
+    telegramBridgeUrl: env.TELEGRAM_BRIDGE_URL,
+    telegramBridgeToken: env.TELEGRAM_BRIDGE_TOKEN ?? (env.TELEGRAM_BRIDGE_TOKEN_FILE ? readFileSync(env.TELEGRAM_BRIDGE_TOKEN_FILE, 'utf8').trim() : undefined),
+    accessPassword: env.ACCESS_PASSWORD ?? (env.ACCESS_PASSWORD_FILE ? readFileSync(env.ACCESS_PASSWORD_FILE, 'utf8').trim() : undefined),
   };
 }
