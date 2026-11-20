@@ -296,21 +296,28 @@ sendo um componente separado, conforme a seção abaixo.
    Na configuração, informe o api_id, o api_hash, uma senha para abrir o Learnflix
    (opcional no modo nativo local), o telefone da conta Telegram, o código recebido
    e a senha de duas etapas, se houver. Esses valores são digitados de forma oculta.
-3. **Adicione o curso:** abra o Learnflix, vá em **Adicionar → Do Telegram**, cole o
-   link do canal, grupo ou tópico acessível à conta e confira a prévia antes de adicionar.
-4. **Assista:** o vídeo é transmitido por partes, sem baixar o curso inteiro, e o ponto
-   em que você parou fica salvo para continuar depois.
 
 A conta usada precisa ter acesso à origem. A sessão fica salva nesta instalação;
 não é preciso repetir o login a cada abertura.
 
-Em **Adicionar → Do Telegram**, cole o link de um canal ou tópico acessível à sua
-conta, confira a lista de vídeos e materiais e adicione à biblioteca. Os vídeos
-são transmitidos por partes conforme o player pede, inclusive ao avançar ou
-retomar. Não é necessário baixar o curso inteiro. Anexos são baixados
-individualmente quando você os abre.
+### Adicionar um curso do Telegram
 
-O progresso continua no banco local do Learnflix: posição atual, trecho mais
+1. Abra o Learnflix e clique em **Adicionar → Do Telegram**.
+2. Cole o link do canal, grupo ou tópico acessível à conta. Formatos aceitos:
+   - `https://t.me/NomeDoCanal` — o catálogo inteiro do canal.
+   - `https://t.me/NomeDoGrupo/123` — um tópico do fórum (123 é a criação do tópico).
+   - `https://t.me/NomeDoGrupo/123/456` — o tópico 123, a partir da mensagem 456.
+   - Convites `https://t.me/+…` ou `https://t.me/joinchat/…` — somente quando a conta
+     **já participa**; o Learnflix não envia pedido de entrada.
+3. Confira a **prévia**: a lista de vídeos e materiais aparece antes de adicionar.
+   Listar não baixa nenhum arquivo.
+4. Clique para **adicionar**: o curso entra na biblioteca e os vídeos são transmitidos
+   por partes, sem baixar o curso inteiro. Anexos são baixados individualmente ao abrir.
+5. Para trazer aulas novas ou aplicar os títulos da legenda, use **Atualizar lista do
+   Telegram** no menu do curso; o progresso é preservado.
+
+Os vídeos são transmitidos por partes conforme o player pede, inclusive ao avançar ou
+retomar. O progresso continua no banco local do Learnflix: posição atual, trecho mais
 avançado e conclusão de cada aula. A identidade é a mensagem de origem, então
 **Atualizar lista do Telegram** preserva o progresso mesmo que o nome da aula
 mude. Quando a mensagem tem uma legenda descritiva, ela fornece o título visual
