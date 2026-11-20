@@ -278,7 +278,10 @@ Python, **FFmpeg e FFprobe incluídos**:
   [INSTALAR-NATIVO.md](INSTALAR-NATIVO.md). Eles preparam Node, Python, FFmpeg e
   FFprobe numa pasta do usuário, sem mexer no PATH global.
 
-A versão com essas integrações ainda não foi publicada no npm/GitHub Releases.
+A versão com essas integrações está publicada no npm como **2.1.0** e no
+[GitHub Releases](https://github.com/OnaitsirC-MiromA/learnflix-v2/releases).
+O `npx learnflix` instala o app (Node); para o Telegram, a ponte Python continua
+sendo um componente separado, conforme a seção abaixo.
 
 ## Cursos do Telegram (opcional)
 
